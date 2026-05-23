@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Peppies"
+version = "1.0.0"
+id = "artifacts/peppies"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19094
+
+[services.development]
+run = "pnpm --filter @workspace/peppies run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/peppies", "run", "build" ]
+publicDir = "artifacts/peppies/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19094"
+BASE_PATH = "/"
