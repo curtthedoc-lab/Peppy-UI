@@ -1,27 +1,52 @@
+import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
+
+const skeletonItems = [
+  { width: "w-2/5", subWidth: "w-1/3" },
+  { width: "w-1/3", subWidth: "w-1/4" },
+  { width: "w-2/5", subWidth: "w-1/3" },
+];
 
 export function History() {
   return (
-    <div className="h-full flex flex-col p-6">
-      <div className="flex items-center gap-3 mb-8 mt-4">
-        <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
-          <Clock size={24} />
-        </div>
-        <h2 className="text-2xl font-bold">Injection History</h2>
-      </div>
+    <div className="flex flex-col px-5 pt-14">
+      <header className="mb-8">
+        <p className="text-[13px] font-medium text-muted-foreground/80 tracking-wide uppercase mb-1">
+          Records
+        </p>
+        <h1 className="text-[28px] font-bold tracking-[-0.03em] leading-none">
+          History
+        </h1>
+      </header>
 
-      <div className="flex flex-col gap-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-card border border-card-border rounded-xl p-4 flex items-center gap-4 animate-pulse">
-            <div className="w-12 h-12 rounded-full bg-muted"></div>
-            <div className="flex-1 space-y-2">
-              <div className="h-4 bg-muted rounded w-1/3"></div>
-              <div className="h-3 bg-muted rounded w-1/4"></div>
+      <div className="flex flex-col gap-3">
+        {skeletonItems.map((item, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07, duration: 0.2 }}
+            className="bg-card rounded-3xl p-4 border border-border/60 flex items-center gap-4"
+            data-testid={`skeleton-history-${i}`}
+          >
+            <div className="w-11 h-11 rounded-2xl bg-muted animate-pulse flex-shrink-0" />
+            <div className="flex-1 space-y-2.5">
+              <div className={`h-3.5 bg-muted rounded-full animate-pulse ${item.width}`} />
+              <div className={`h-2.5 bg-muted rounded-full animate-pulse ${item.subWidth}`} />
             </div>
-            <div className="h-4 bg-muted rounded w-12"></div>
-          </div>
+            <div className="h-3 bg-muted rounded-full animate-pulse w-10" />
+          </motion.div>
         ))}
       </div>
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.35 }}
+        className="text-center text-[13px] text-muted-foreground/60 mt-8"
+      >
+        No history yet. Start logging to see entries here.
+      </motion.p>
     </div>
   );
 }

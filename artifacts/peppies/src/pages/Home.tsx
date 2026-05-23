@@ -1,98 +1,140 @@
 import { motion } from "framer-motion";
 import { PenLine, Scale, Droplets } from "lucide-react";
 import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
 
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.09, delayChildren: 0.05 },
   },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+const cardVariants = {
+  hidden: { opacity: 0, y: 24 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 280, damping: 26 },
+  },
 };
+
+function ActionButton({ href, label, testId }: { href?: string; label: string; testId: string }) {
+  const cls = "text-[13px] font-semibold text-primary tracking-wide px-3 py-1.5 rounded-xl hover:bg-primary/10 active:scale-95 transition-all duration-150";
+  if (href) {
+    return (
+      <Link href={href} className={cls} data-testid={testId}>
+        {label}
+      </Link>
+    );
+  }
+  return (
+    <button className={cls} data-testid={testId}>
+      {label}
+    </button>
+  );
+}
+
+function CardIcon({ icon: Icon }: { icon: typeof PenLine }) {
+  return (
+    <div className="w-9 h-9 rounded-2xl bg-primary/12 flex items-center justify-center text-primary flex-shrink-0">
+      <Icon size={17} strokeWidth={2} />
+    </div>
+  );
+}
 
 export function Home() {
   return (
-    <div className="p-6 h-full flex flex-col">
-      <header className="mb-8 mt-4">
-        <h1 className="text-xl font-medium text-muted-foreground">Good morning</h1>
-        <h2 className="text-3xl font-bold text-primary mt-1 tracking-tight">Peppies</h2>
+    <div className="px-5 pt-14 pb-4 flex flex-col">
+      <header className="mb-8">
+        <p className="text-[13px] font-medium text-muted-foreground/80 tracking-wide uppercase mb-1">
+          Good morning
+        </p>
+        <h1 className="text-[32px] font-bold text-primary tracking-[-0.03em] leading-none">
+          Peppies
+        </h1>
       </header>
 
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="flex flex-col gap-4"
+        className="flex flex-col gap-3"
       >
         {/* Recent Injections */}
-        <motion.div variants={itemVariants} className="bg-card rounded-2xl p-5 border border-card-border shadow-sm flex flex-col justify-between min-h-[140px]">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
-              <PenLine size={20} />
+        <motion.div
+          variants={cardVariants}
+          className="bg-card rounded-3xl p-5 border border-border/60"
+          data-testid="card-recent-injections"
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <CardIcon icon={PenLine} />
+            <div>
+              <h2 className="text-[15px] font-semibold leading-tight">Recent Injections</h2>
+              <p className="text-[12px] text-muted-foreground/70 mt-0.5">Track your doses</p>
             </div>
-            <h3 className="font-semibold text-lg">Recent Injections</h3>
           </div>
-          <div className="mt-4 flex items-end justify-between">
-            <p className="text-muted-foreground text-sm">No injections logged yet</p>
-            <Link href="/log" asChild>
-              <Button variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10 -mr-2" size="sm" data-testid="button-log-now">
-                Log now
-              </Button>
-            </Link>
+          <div className="flex items-center justify-between">
+            <p className="text-[13px] text-muted-foreground">No injections logged yet</p>
+            <ActionButton href="/log" label="Log now" testId="button-log-now" />
           </div>
         </motion.div>
 
         {/* Weight Tracking */}
-        <motion.div variants={itemVariants} className="bg-card rounded-2xl p-5 border border-card-border shadow-sm flex flex-col justify-between min-h-[140px]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
-                <Scale size={20} />
-              </div>
-              <h3 className="font-semibold text-lg">Weight Tracking</h3>
+        <motion.div
+          variants={cardVariants}
+          className="bg-card rounded-3xl p-5 border border-border/60"
+          data-testid="card-weight-tracking"
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <CardIcon icon={Scale} />
+            <div>
+              <h2 className="text-[15px] font-semibold leading-tight">Weight Tracking</h2>
+              <p className="text-[12px] text-muted-foreground/70 mt-0.5">Monitor your progress</p>
             </div>
           </div>
-          <div className="mt-4 flex items-end justify-between">
+          <div className="flex items-end justify-between">
             <div>
-              <p className="text-3xl font-bold tracking-tight">-- <span className="text-xl text-muted-foreground font-medium">kg</span></p>
+              <span className="text-[40px] font-bold tracking-[-0.04em] leading-none text-foreground/90">--</span>
+              <span className="text-[17px] font-medium text-muted-foreground ml-1.5">kg</span>
             </div>
-            <div className="w-16 h-8 opacity-40">
-              <svg viewBox="0 0 100 40" className="w-full h-full stroke-primary fill-none stroke-2 stroke-[round]">
-                <path d="M0,20 Q10,10 20,20 T40,20 T60,20 T80,20 T100,20" />
+            <div className="flex items-end gap-4">
+              <svg viewBox="0 0 80 28" className="w-16 h-7 opacity-30 stroke-primary fill-none" strokeWidth="2" strokeLinecap="round">
+                <path d="M0,18 Q10,6 20,14 T40,12 T60,8 T80,14" />
               </svg>
+              <ActionButton label="Track" testId="button-track-weight" />
             </div>
-            <Button variant="outline" size="sm" className="rounded-full px-4" data-testid="button-track-weight">Track</Button>
           </div>
         </motion.div>
 
         {/* Hydration */}
-        <motion.div variants={itemVariants} className="bg-card rounded-2xl p-5 border border-card-border shadow-sm flex flex-col justify-between min-h-[140px]">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/10 text-primary rounded-xl">
-              <Droplets size={20} />
+        <motion.div
+          variants={cardVariants}
+          className="bg-card rounded-3xl p-5 border border-border/60"
+          data-testid="card-hydration"
+        >
+          <div className="flex items-center gap-3 mb-5">
+            <CardIcon icon={Droplets} />
+            <div>
+              <h2 className="text-[15px] font-semibold leading-tight">Hydration</h2>
+              <p className="text-[12px] text-muted-foreground/70 mt-0.5">Daily water intake</p>
             </div>
-            <h3 className="font-semibold text-lg">Hydration</h3>
           </div>
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="relative w-12 h-12 flex items-center justify-center">
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-muted" />
-                  <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" fill="transparent" strokeDasharray="125.6" strokeDashoffset="125.6" className="text-primary" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative w-11 h-11">
+                <svg className="w-full h-full -rotate-90" viewBox="0 0 44 44">
+                  <circle cx="22" cy="22" r="18" stroke="currentColor" strokeWidth="3.5" fill="transparent" className="text-muted" />
+                  <circle cx="22" cy="22" r="18" stroke="currentColor" strokeWidth="3.5" fill="transparent" strokeDasharray="113" strokeDashoffset="113" className="text-primary" strokeLinecap="round" />
                 </svg>
-                <span className="absolute text-sm font-bold">0</span>
+                <span className="absolute inset-0 flex items-center justify-center text-[13px] font-bold">0</span>
               </div>
-              <p className="text-muted-foreground text-sm font-medium">0 of 8 glasses</p>
+              <div>
+                <p className="text-[22px] font-bold tracking-tight leading-none">0 <span className="text-[14px] font-medium text-muted-foreground">/ 8</span></p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">glasses today</p>
+              </div>
             </div>
-            <Button variant="secondary" size="sm" className="rounded-full px-4" data-testid="button-add-water">+ Add</Button>
+            <ActionButton label="+ Add" testId="button-add-water" />
           </div>
         </motion.div>
       </motion.div>
