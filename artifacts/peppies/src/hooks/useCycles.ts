@@ -20,8 +20,11 @@ function load(): Cycle[] {
   }
 }
 
+export const CYCLES_CHANGED_EVENT = "peppies_cycles_changed";
+
 function save(cycles: Cycle[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cycles));
+  window.dispatchEvent(new CustomEvent(CYCLES_CHANGED_EVENT));
 }
 
 export function useCycles() {

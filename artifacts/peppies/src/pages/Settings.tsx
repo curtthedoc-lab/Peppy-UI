@@ -6,6 +6,7 @@ import { useInjections } from "@/hooks/useInjections";
 import { exportInjectionsAsCsv } from "@/utils/exportCsv";
 import { exportBackupAsJson, parseBackupFile, applyBackup, summarizeBackup, BackupFile } from "@/utils/backup";
 import { AboutSheet } from "@/components/AboutSheet";
+import { ProfileSheet } from "@/components/ProfileSheet";
 import { usePreferences } from "@/hooks/usePreferences";
 import { requestNotificationPermission, notificationSupported, currentNotificationPermission } from "@/hooks/useCycleReminder";
 
@@ -27,6 +28,7 @@ const ALL_STORAGE_KEYS = [
   "peppies_hydration",
   "peppies_preferences",
   "peppies_notifications",
+  "peppies_profile",
 ];
 
 function SectionLabel({ label }: { label: string }) {
@@ -216,6 +218,7 @@ export function Settings() {
   const [importError, setImportError] = useState<string | null>(null);
   const [restoreDone, setRestoreDone] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { injections } = useInjections();
   const { prefs, toggleWeightUnit, setCycleReminders } = usePreferences();
@@ -311,9 +314,10 @@ export function Settings() {
             <Row
               icon={User}
               label="Profile"
-              sublabel="Manage your information"
+              sublabel="Goals and body measurements"
               teal
               testId="settings-profile"
+              onClick={() => setShowProfile(true)}
             />
           </div>
 
@@ -494,6 +498,7 @@ export function Settings() {
           />
         )}
         {showAbout && <AboutSheet onClose={() => setShowAbout(false)} />}
+        {showProfile && <ProfileSheet onClose={() => setShowProfile(false)} />}
       </AnimatePresence>
     </>
   );

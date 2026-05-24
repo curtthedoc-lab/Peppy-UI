@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { usePreferences } from "./usePreferences";
+import { CYCLES_CHANGED_EVENT } from "./useCycles";
 
 const NOTIFIED_KEY = "peppies_notifications";
 
@@ -82,6 +83,11 @@ export function useCycleReminder() {
     if (Notification.permission !== "granted") return;
 
     const check = () => {
+      // Always clear any pending timer first — it may be tied to a stale or removed cycle.
+      if (scheduledTimer.current !== null) {
+        clearTimeout(scheduledTimer.current);
+        scheduledTimer.current = null;
+      }
       const cycle = loadActiveCycle();
       if (!cycle) return;
       const endTime = cycleEndTime(cycle);
@@ -97,9 +103,17 @@ export function useCycleReminder() {
       }
       const msUntil = endTime - now;
       if (msUntil <= 24 * 60 * 60 * 1000) {
-        if (scheduledTimer.current !== null) clearTimeout(scheduledTimer.current);
+        const cycleIdAtSchedule = cycle.id;
         scheduledTimer.current = window.setTimeout(() => {
-          fireNotification(cycle);
+          scheduledTimer.current = null;
+          // Re-verify at fire time: cycle still active, same id, still past end, not already notified.
+          const fresh = loadActiveCycle();
+          if (!fresh || fresh.id !== cycleIdAtSchedule) return;
+          const freshEnd = cycleEndTime(fresh);
+          if (freshEnd === null || Date.now() < freshEnd) return;
+          const freshNotified = loadNotified();
+          if (freshNotified.notifiedCycles.includes(fresh.id)) return;
+          fireNotification(fresh);
         }, msUntil + 1000);
       }
     };
@@ -110,10 +124,14 @@ export function useCycleReminder() {
     };
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("focus", check);
+    window.addEventListener(CYCLES_CHANGED_EVENT, check);
+    window.addEventListener("storage", check);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("focus", check);
+      window.removeEventListener(CYCLES_CHANGED_EVENT, check);
+      window.removeEventListener("storage", check);
       if (scheduledTimer.current !== null) {
         clearTimeout(scheduledTimer.current);
         scheduledTimer.current = null;
