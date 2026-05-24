@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Bell, Scale, Moon, Info, ChevronRight, Trash2, AlertTriangle, Download, CheckCheck } from "lucide-react";
+import { User, Bell, Scale, Moon, Info, ChevronRight, Trash2, AlertTriangle, Download, CheckCheck, Upload, FileJson } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useInjections } from "@/hooks/useInjections";
 import { exportInjectionsAsCsv } from "@/utils/exportCsv";
+import { exportBackupAsJson, parseBackupFile, applyBackup, summarizeBackup, BackupFile } from "@/utils/backup";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -75,6 +76,80 @@ function Row({
   );
 }
 
+function RestoreConfirmSheet({
+  backup,
+  onConfirm,
+  onCancel,
+}: {
+  backup: BackupFile;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const summary = summarizeBackup(backup);
+  const exportedDate = new Date(summary.exportedAt);
+  const dateLabel = isNaN(exportedDate.getTime())
+    ? summary.exportedAt
+    : exportedDate.toLocaleString();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm px-4 pb-6"
+      onClick={onCancel}
+    >
+      <motion.div
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 60, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 320, damping: 30 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[430px] bg-card border border-border/60 rounded-3xl p-6 flex flex-col gap-5"
+      >
+        <div className="flex flex-col items-center text-center gap-3">
+          <div className="w-14 h-14 rounded-full bg-primary/12 flex items-center justify-center text-primary">
+            <Upload size={24} strokeWidth={1.8} />
+          </div>
+          <div>
+            <h2 className="text-[17px] font-bold mb-1.5">Restore this backup?</h2>
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
+              This will <span className="font-semibold text-foreground">replace</span> all current
+              injections, calculations, and cycles on this device.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-muted/50 rounded-2xl p-4 flex flex-col gap-1.5 text-[13px]">
+          <div className="flex justify-between"><span className="text-muted-foreground">Exported</span><span className="font-medium">{dateLabel}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Injections</span><span className="font-medium">{summary.injections}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Calculations</span><span className="font-medium">{summary.calculations}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Cycles</span><span className="font-medium">{summary.cycles}</span></div>
+        </div>
+
+        <div className="flex flex-col gap-2.5">
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={onConfirm}
+            data-testid="button-confirm-restore"
+            className="w-full bg-primary text-primary-foreground font-semibold text-[15px] py-4 rounded-2xl tracking-wide"
+          >
+            Restore Backup
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={onCancel}
+            data-testid="button-cancel-restore"
+            className="w-full bg-muted text-foreground font-semibold text-[15px] py-4 rounded-2xl tracking-wide"
+          >
+            Cancel
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 function ResetConfirmSheet({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
   return (
     <motion.div
@@ -131,6 +206,11 @@ export function Settings() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [resetDone, setResetDone] = useState(false);
   const [exported, setExported] = useState(false);
+  const [backedUp, setBackedUp] = useState(false);
+  const [pendingBackup, setPendingBackup] = useState<BackupFile | null>(null);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [restoreDone, setRestoreDone] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { injections } = useInjections();
 
   const handleReset = () => {
@@ -144,6 +224,38 @@ export function Settings() {
     exportInjectionsAsCsv(injections);
     setExported(true);
     setTimeout(() => setExported(false), 2500);
+  };
+
+  const handleBackup = () => {
+    exportBackupAsJson();
+    setBackedUp(true);
+    setTimeout(() => setBackedUp(false), 2500);
+  };
+
+  const handleChooseRestoreFile = () => {
+    setImportError(null);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const backup = await parseBackupFile(file);
+      setPendingBackup(backup);
+    } catch (err) {
+      setImportError(err instanceof Error ? err.message : "Could not read backup file.");
+      setTimeout(() => setImportError(null), 5000);
+    }
+  };
+
+  const handleConfirmRestore = () => {
+    if (!pendingBackup) return;
+    applyBackup(pendingBackup);
+    setPendingBackup(null);
+    setRestoreDone(true);
+    setTimeout(() => window.location.reload(), 800);
   };
 
   return (
@@ -240,6 +352,43 @@ export function Settings() {
               }
             />
             <Row
+              icon={FileJson}
+              label="Backup (JSON)"
+              sublabel="Full backup — injections, calculations, cycles"
+              teal
+              testId="settings-backup"
+              onClick={handleBackup}
+              right={
+                backedUp ? (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-1 text-primary text-[12px] font-semibold"
+                  >
+                    <CheckCheck size={14} strokeWidth={2.2} />
+                    Saved
+                  </motion.span>
+                ) : (
+                  <ChevronRight size={16} className="text-muted-foreground/50" strokeWidth={2} />
+                )
+              }
+            />
+            <Row
+              icon={Upload}
+              label="Restore from Backup"
+              sublabel="Import a Peppies JSON backup file"
+              testId="settings-restore"
+              onClick={handleChooseRestoreFile}
+            />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              onChange={handleFileSelected}
+              className="hidden"
+              data-testid="input-restore-file"
+            />
+            <Row
               icon={Trash2}
               label="Reset App Data"
               sublabel="Clear all injections and calculations"
@@ -249,6 +398,30 @@ export function Settings() {
               right={<span />}
             />
           </div>
+
+          <AnimatePresence>
+            {importError && (
+              <motion.p
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="text-center text-[13px] text-destructive mt-4"
+                data-testid="text-import-error"
+              >
+                {importError}
+              </motion.p>
+            )}
+            {restoreDone && (
+              <motion.p
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="text-center text-[13px] text-primary mt-4"
+              >
+                Backup restored. Restarting...
+              </motion.p>
+            )}
+          </AnimatePresence>
         </motion.div>
 
         <AnimatePresence>
@@ -270,6 +443,13 @@ export function Settings() {
           <ResetConfirmSheet
             onConfirm={handleReset}
             onCancel={() => setShowConfirm(false)}
+          />
+        )}
+        {pendingBackup && (
+          <RestoreConfirmSheet
+            backup={pendingBackup}
+            onConfirm={handleConfirmRestore}
+            onCancel={() => setPendingBackup(null)}
           />
         )}
       </AnimatePresence>
