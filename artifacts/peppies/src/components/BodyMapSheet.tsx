@@ -11,42 +11,42 @@ interface SitePoint { name: string; px: number; py: number; }
 // "viewer left" = patient's right side, "viewer right" = patient's left side.
 const SITE_POINTS: SitePoint[] = [
   // ── Deltoids (outer shoulder / upper arm) ──
-  { name: "R. Deltoid 1",        px:  38/200, py:  96/480 },
-  { name: "R. Deltoid 2",        px:  28/200, py: 122/480 },
-  { name: "L. Deltoid 1",        px: 162/200, py:  96/480 },
-  { name: "L. Deltoid 2",        px: 172/200, py: 122/480 },
+  { name: "R. Deltoid 1",        px:  38/200, py: 116/480 },
+  { name: "R. Deltoid 2",        px:  32/200, py: 140/480 },
+  { name: "L. Deltoid 1",        px: 162/200, py: 116/480 },
+  { name: "L. Deltoid 2",        px: 168/200, py: 140/480 },
   // ── Outer arms (tricep / lateral) ──
-  { name: "R. Outer Arm",        px:  24/200, py: 158/480 },
-  { name: "L. Outer Arm",        px: 176/200, py: 158/480 },
+  { name: "R. Outer Arm",        px:  30/200, py: 180/480 },
+  { name: "L. Outer Arm",        px: 170/200, py: 180/480 },
   // ── Abdomen (right of centre) ──
-  { name: "R. Abdomen 1",        px:  82/200, py: 158/480 },
-  { name: "R. Abdomen 2",        px:  78/200, py: 186/480 },
-  { name: "R. Abdomen 3",        px:  80/200, py: 210/480 },
+  { name: "R. Abdomen 1",        px:  84/200, py: 158/480 },
+  { name: "R. Abdomen 2",        px:  82/200, py: 186/480 },
+  { name: "R. Abdomen 3",        px:  84/200, py: 212/480 },
   // ── Abdomen (left of centre) ──
-  { name: "L. Abdomen 1",        px: 118/200, py: 158/480 },
-  { name: "L. Abdomen 2",        px: 122/200, py: 186/480 },
-  { name: "L. Abdomen 3",        px: 120/200, py: 210/480 },
+  { name: "L. Abdomen 1",        px: 116/200, py: 158/480 },
+  { name: "L. Abdomen 2",        px: 118/200, py: 186/480 },
+  { name: "L. Abdomen 3",        px: 116/200, py: 212/480 },
   // ── Flanks / obliques (viewer left) ──
-  { name: "R. Flank 1",          px:  52/200, py: 168/480 },
-  { name: "R. Flank 2",          px:  48/200, py: 194/480 },
-  { name: "R. Flank 3",          px:  52/200, py: 220/480 },
+  { name: "R. Flank 1",          px:  60/200, py: 168/480 },
+  { name: "R. Flank 2",          px:  58/200, py: 194/480 },
+  { name: "R. Flank 3",          px:  60/200, py: 220/480 },
   // ── Flanks / obliques (viewer right) ──
-  { name: "L. Flank 1",          px: 148/200, py: 168/480 },
-  { name: "L. Flank 2",          px: 152/200, py: 194/480 },
-  { name: "L. Flank 3",          px: 148/200, py: 220/480 },
+  { name: "L. Flank 1",          px: 140/200, py: 168/480 },
+  { name: "L. Flank 2",          px: 142/200, py: 194/480 },
+  { name: "L. Flank 3",          px: 140/200, py: 220/480 },
   // ── Lower abdomen ──
-  { name: "R. Lower Abdomen",    px:  74/200, py: 236/480 },
-  { name: "L. Lower Abdomen",    px: 126/200, py: 236/480 },
-  // ── Glutes (upper-outer hip) ──
-  { name: "R. Glute 1",          px:  56/200, py: 256/480 },
-  { name: "R. Glute 2",          px:  70/200, py: 278/480 },
-  { name: "L. Glute 1",          px: 144/200, py: 256/480 },
-  { name: "L. Glute 2",          px: 130/200, py: 278/480 },
+  { name: "R. Lower Abdomen",    px:  82/200, py: 240/480 },
+  { name: "L. Lower Abdomen",    px: 118/200, py: 240/480 },
+  // ── Upper hip / glute crest ──
+  { name: "R. Glute 1",          px:  66/200, py: 260/480 },
+  { name: "R. Glute 2",          px:  78/200, py: 282/480 },
+  { name: "L. Glute 1",          px: 134/200, py: 260/480 },
+  { name: "L. Glute 2",          px: 122/200, py: 282/480 },
   // ── Thighs ──
-  { name: "R. Thigh 1",          px:  62/200, py: 314/480 },
-  { name: "R. Thigh 2",          px:  66/200, py: 352/480 },
-  { name: "L. Thigh 1",          px: 138/200, py: 314/480 },
-  { name: "L. Thigh 2",          px: 134/200, py: 352/480 },
+  { name: "R. Thigh 1",          px:  78/200, py: 314/480 },
+  { name: "R. Thigh 2",          px:  82/200, py: 354/480 },
+  { name: "L. Thigh 1",          px: 122/200, py: 314/480 },
+  { name: "L. Thigh 2",          px: 118/200, py: 354/480 },
 ];
 
 const ALL_SITE_NAMES = SITE_POINTS.map((s) => s.name);
@@ -103,82 +103,111 @@ function AnatomySVG() {
       style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
       aria-hidden
     >
-      {/* ── Body shapes ── */}
+      {/* ── Body shapes — anatomically proportioned humanoid silhouette ── */}
 
-      {/* Head */}
-      <ellipse cx="100" cy="36" rx="22" ry="25" fill={F} stroke={S} strokeWidth={SW} />
+      {/* Head — slightly elongated ovoid */}
+      <ellipse cx="100" cy="34" rx="18" ry="22" fill={F} stroke={S} strokeWidth={SW} />
 
-      {/* Neck */}
-      <path d="M 93 59 C 90 65,89 71,88 76 L 112 76 C 111 71,110 65,107 59 Z" fill={F} />
-      {/* Neck-to-shoulder blend */}
-      <path d="M 88 74 C 80 75,68 78,60 84 L 140 84 C 132 78,120 75,112 74 Z" fill={F} />
-
-      {/* Torso */}
+      {/* Neck + trapezius slope into shoulders */}
       <path
-        d="M 60 84
-           C 48 86,42 94,42 110
-           C 40 126,40 142,42 154
-           C 44 170,50 188,52 207
-           C 52 224,52 240,50 254
-           L 150 254
-           C 148 240,148 224,148 207
-           C 150 188,156 170,158 154
-           C 160 142,160 126,158 110
-           C 158 94,152 86,140 84 Z"
+        d="M 92 54
+           C 90 60,89 66,88 72
+           C 80 74,72 78,64 84
+           C 56 88,50 94,46 100
+           L 154 100
+           C 150 94,144 88,136 84
+           C 128 78,120 74,112 72
+           C 111 66,110 60,108 54 Z"
         fill={F} stroke={S} strokeWidth={SW} strokeLinejoin="round"
       />
 
-      {/* Left arm (viewer-left = patient-right) */}
+      {/* Torso — V-tapered chest into waist, then flaring slightly to hips */}
       <path
-        d="M 42 110
-           C 34 120,26 142,24 164
-           C 22 182,22 200,24 218
-           C 26 230,32 238,42 238
-           L 52 238
-           C 58 236,60 228,58 216
-           C 56 198,56 180,58 164
-           C 60 144,58 124,54 112 Z"
+        d="M 46 100
+           C 42 116,42 134,44 150
+           C 46 168,50 186,52 204
+           C 52 222,52 240,54 256
+           C 56 268,62 274,72 274
+           L 128 274
+           C 138 274,144 268,146 256
+           C 148 240,148 222,148 204
+           C 150 186,154 168,156 150
+           C 158 134,158 116,154 100 Z"
         fill={F} stroke={S} strokeWidth={SW} strokeLinejoin="round"
       />
 
-      {/* Right arm */}
+      {/* Left arm — deltoid bulge → tapered upper arm → forearm → relaxed hand */}
       <path
-        d="M 158 110
-           C 166 120,174 142,176 164
-           C 178 182,178 200,176 218
-           C 174 230,168 238,158 238
-           L 148 238
-           C 142 236,140 228,142 216
-           C 144 198,144 180,142 164
-           C 140 144,142 124,146 112 Z"
+        d="M 46 100
+           C 36 104,30 116,28 134
+           C 26 152,26 168,28 184
+           C 30 198,32 212,32 226
+           C 32 240,34 252,38 262
+           C 40 270,42 276,42 282
+           C 42 286,46 288,50 286
+           C 54 284,56 280,56 274
+           C 56 268,54 262,54 256
+           C 54 240,54 222,54 204
+           C 56 186,60 168,60 150
+           C 60 134,58 116,54 102 Z"
         fill={F} stroke={S} strokeWidth={SW} strokeLinejoin="round"
       />
 
-      {/* Left leg */}
+      {/* Right arm — mirror */}
       <path
-        d="M 50 254
-           C 44 270,40 296,40 322
-           C 38 348,38 374,40 400
-           C 40 416,48 424,64 422
-           L 78 422
-           C 84 420,86 414,84 404
-           C 82 382,82 358,84 332
-           C 86 306,88 280,94 258 Z"
+        d="M 154 100
+           C 164 104,170 116,172 134
+           C 174 152,174 168,172 184
+           C 170 198,168 212,168 226
+           C 168 240,166 252,162 262
+           C 160 270,158 276,158 282
+           C 158 286,154 288,150 286
+           C 146 284,144 280,144 274
+           C 144 268,146 262,146 256
+           C 146 240,146 222,146 204
+           C 144 186,140 168,140 150
+           C 140 134,142 116,146 102 Z"
         fill={F} stroke={S} strokeWidth={SW} strokeLinejoin="round"
       />
 
-      {/* Right leg */}
+      {/* Left leg — thigh → knee → calf bulge → ankle → foot */}
       <path
-        d="M 150 254
-           C 156 270,160 296,160 322
-           C 162 348,162 374,160 400
-           C 160 416,152 424,136 422
-           L 122 422
-           C 116 420,114 414,116 404
-           C 118 382,118 358,116 332
-           C 114 306,112 280,106 258 Z"
+        d="M 72 274
+           C 66 290,62 312,62 336
+           C 60 358,60 378,62 398
+           C 64 414,66 430,68 444
+           C 68 454,70 462,72 466
+           C 74 470,82 470,86 466
+           C 88 462,90 454,90 444
+           C 92 430,92 414,92 398
+           C 92 378,92 358,94 336
+           C 96 312,98 290,100 274 Z"
         fill={F} stroke={S} strokeWidth={SW} strokeLinejoin="round"
       />
+
+      {/* Right leg — mirror */}
+      <path
+        d="M 128 274
+           C 134 290,138 312,138 336
+           C 140 358,140 378,138 398
+           C 136 414,134 430,132 444
+           C 132 454,130 462,128 466
+           C 126 470,118 470,114 466
+           C 112 462,110 454,110 444
+           C 108 430,108 414,108 398
+           C 108 378,108 358,106 336
+           C 104 312,102 290,100 274 Z"
+        fill={F} stroke={S} strokeWidth={SW} strokeLinejoin="round"
+      />
+
+      {/* Subtle knee + calf shading */}
+      <ellipse cx="76" cy="356" rx="9" ry="3.5" fill="hsl(215 22% 20%)" opacity="0.55" />
+      <ellipse cx="124" cy="356" rx="9" ry="3.5" fill="hsl(215 22% 20%)" opacity="0.55" />
+      {/* Inner thigh divider */}
+      <line x1="100" y1="278" x2="100" y2="346" stroke="hsl(215 22% 18%)" strokeWidth="1.2" opacity="0.55" />
+
+      {/* Centre line — subtle sternum/nasal indicator */}
+      <line x1="100" y1="56" x2="100" y2="76" stroke={S} strokeWidth="0.8" opacity="0.35" />
 
       {/* ── Muscle zone highlights ── */}
 
@@ -568,7 +597,7 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
             style={{
               position: "relative",
               height: "100%",
-              maxHeight: 420,
+              maxHeight: 500,
               aspectRatio: "200 / 480",
               flexShrink: 0,
             }}
