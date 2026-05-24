@@ -273,6 +273,7 @@ export function Calculator() {
   const { calculations, addCalculation, clearCalculations } = useCalculations();
   const [result, setResult] = useState<{ concentration: number; mlRequired: number; syringeUnits: number } | null>(null);
   const [doseUnit, setDoseUnit] = useState<"mcg" | "mg">("mcg");
+  const [preMixed, setPreMixed] = useState<{ name: string; concentration: string } | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
@@ -302,6 +303,10 @@ export function Calculator() {
     // Auto-pick mg input for peptides whose per-unit yield is measured in mg
     // (e.g. L-Carnitine, L-Glutathione) — those typically dose in milligrams.
     setDoseUnit(/\bmg per unit\b/i.test(peptide.perUnit) ? "mg" : "mcg");
+    // Hide the BAC water field for pre-mixed peptides — the implied volume is
+    // still loaded into the form so the math runs, but the user never has to
+    // think about it.
+    setPreMixed(peptide.bacByVialMg ? { name: peptide.name, concentration: peptide.concentration } : null);
     setResult(null);
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -327,14 +332,42 @@ export function Calculator() {
             error={errors.vialMg?.message}
             {...register("vialMg")}
           />
-          <NumInput
-            label="BAC Water"
-            unit="mL"
-            placeholder="e.g. 2"
-            testId="input-bac-ml"
-            error={errors.bacMl?.message}
-            {...register("bacMl")}
-          />
+          {preMixed ? (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold text-muted-foreground/70 tracking-widest uppercase px-1">
+                BAC Water
+              </label>
+              <div className="flex items-center gap-3 bg-muted/30 border border-border/40 rounded-2xl px-4 py-3.5">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+                  <Droplet size={16} strokeWidth={2} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-semibold leading-tight">Not required — pre-mixed</p>
+                  <p className="text-[11px] text-muted-foreground/60 mt-0.5 truncate">
+                    {preMixed.name} ships at {preMixed.concentration}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreMixed(null)}
+                  data-testid="button-show-bac"
+                  className="text-[11px] font-semibold text-primary/80 hover:text-primary flex-shrink-0"
+                >
+                  Show
+                </button>
+              </div>
+              <input type="hidden" {...register("bacMl")} />
+            </div>
+          ) : (
+            <NumInput
+              label="BAC Water"
+              unit="mL"
+              placeholder="e.g. 2"
+              testId="input-bac-ml"
+              error={errors.bacMl?.message}
+              {...register("bacMl")}
+            />
+          )}
           <NumInput
             label="Desired Dose"
             unit={doseUnit}
