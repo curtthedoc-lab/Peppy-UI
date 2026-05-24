@@ -308,7 +308,16 @@ function Hotspot({
 }: {
   site: SitePoint; state: SiteState; isSuggested: boolean; onClick: () => void;
 }) {
-  const c = RING_COLORS[state];
+  // When a site is "suggested" (and not already selected/last-used), paint the
+  // hotspot itself green so the indicator lives on the dot — no floating badge.
+  const showSuggested = isSuggested && (state === "default" || state === "recent");
+  const c = showSuggested
+    ? {
+        ring: "hsl(152 60% 50%)",
+        dot:  "hsl(152 60% 44%)",
+        glow: "0 0 0 4px hsl(152 60% 44% / 0.18), 0 0 14px hsl(152 60% 44% / 0.35)",
+      }
+    : RING_COLORS[state];
 
   return (
     <div
@@ -358,18 +367,6 @@ function Hotspot({
         </motion.div>
       </motion.button>
 
-      {/* Suggested badge */}
-      {isSuggested && state !== "selected" && (
-        <div
-          style={{
-            position: "absolute", top: 2, right: 2,
-            width: 8, height: 8, borderRadius: "50%",
-            background: "hsl(152 58% 44%)",
-            border: "1.5px solid hsl(220 14% 12%)",
-            pointerEvents: "none",
-          }}
-        />
-      )}
     </div>
   );
 }
