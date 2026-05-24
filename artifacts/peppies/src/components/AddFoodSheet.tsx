@@ -194,7 +194,8 @@ export function AddFoodSheet({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm px-4 pb-4"
+        className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm px-4"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
         onClick={onClose}
       >
         <motion.div
@@ -203,7 +204,7 @@ export function AddFoodSheet({
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 } as const}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-[430px] bg-card border border-border/60 rounded-3xl p-5 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+          className="w-full max-w-[430px] bg-card border border-border/60 rounded-3xl p-5 flex flex-col gap-4 max-h-[85vh] overflow-y-auto"
           data-testid="sheet-add-food"
         >
           <div className="flex items-center justify-between">
