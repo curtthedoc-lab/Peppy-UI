@@ -4,17 +4,14 @@ import { X, AlertTriangle, Sparkles } from "lucide-react";
 import { useInjections, Injection } from "@/hooks/useInjections";
 
 // ── Site definitions ──────────────────────────────────────────────────────────
-// px / py are fractions of viewBox width (200) and height (480)
 interface SitePoint {
   name: string;
-  px: number;
-  py: number;
+  px: number; // fraction of viewBox width  (200)
+  py: number; // fraction of viewBox height (480)
 }
 
 const SITE_POINTS: SitePoint[] = [
-  // Patient's right = viewer's left arm
   { name: "Right Deltoid",  px: 38  / 200, py: 108 / 480 },
-  // Patient's left  = viewer's right arm
   { name: "Left Deltoid",   px: 162 / 200, py: 108 / 480 },
   { name: "Right Abdomen",  px: 78  / 200, py: 196 / 480 },
   { name: "Left Abdomen",   px: 122 / 200, py: 196 / 480 },
@@ -46,12 +43,11 @@ function computeSuggestedSite(injections: Injection[]): string | null {
   );
 }
 
-// ── Medical-grade body silhouette SVG ─────────────────────────────────────────
-// viewBox: 0 0 200 480  — front-facing neutral figure, no face features
+// ── Medical body silhouette ───────────────────────────────────────────────────
 function MedicalBodySVG() {
-  const F = "hsl(215 22% 27%)";   // fill — warm dark slate
-  const S = "hsl(215 22% 52%)";   // stroke — visible contrast
-  const W = "1.8";                 // stroke width
+  const F = "hsl(215 22% 27%)";
+  const S = "hsl(215 22% 52%)";
+  const W = "1.8";
 
   return (
     <svg
@@ -59,190 +55,134 @@ function MedicalBodySVG() {
       style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
       aria-hidden
     >
-      <defs>
-        <filter id="body-inner-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
-          <feOffset dx="0" dy="2" result="offset" />
-          <feComposite in="offset" in2="SourceAlpha" operator="in" result="shadow" />
-          <feBlend in="SourceGraphic" in2="shadow" mode="multiply" />
-        </filter>
-      </defs>
+      {/* Head */}
+      <ellipse cx="100" cy="40" rx="26" ry="30" fill={F} stroke={S} strokeWidth={W} />
 
-      {/* ── Head (smooth oval, no face) ── */}
-      <ellipse
-        cx="100" cy="40" rx="26" ry="30"
-        fill={F} stroke={S} strokeWidth={W}
-      />
+      {/* Neck */}
+      <path d="M 88 68 C 86 74, 85 80, 86 86 L 114 86 C 115 80, 114 74, 112 68 Z" fill={F} />
+      <path d="M 86 86 C 78 86, 68 88, 62 92 L 138 92 C 132 88, 122 86, 114 86 Z" fill={F} />
 
-      {/* ── Neck ── */}
+      {/* Torso — wide chest, nipped waist, slight hip */}
       <path
-        d="M 88 68 C 86 74, 85 80, 86 86 L 114 86 C 115 80, 114 74, 112 68 Z"
-        fill={F}
-      />
-      {/* neck-to-shoulder blend */}
-      <path
-        d="M 86 86 C 78 86, 68 88, 62 92 L 138 92 C 132 88, 122 86, 114 86 Z"
-        fill={F}
-      />
-
-      {/* ── Torso ── wide at chest, nipped at waist, slight hip flare */}
-      <path
-        d="
-          M 62 92
-          C 48 94, 40 104, 40 118
-          C 38 138, 38 162, 40 182
-          C 42 200, 48 215, 50 232
-          C 50 242, 50 252, 50 260
-          L 150 260
-          C 150 252, 150 242, 150 232
-          C 152 215, 158 200, 160 182
-          C 162 162, 162 138, 160 118
-          C 160 104, 152 94, 138 92
-          Z
-        "
+        d="M 62 92
+           C 48 94, 40 104, 40 118
+           C 38 138, 38 162, 40 182
+           C 42 200, 48 215, 50 232
+           C 50 242, 50 252, 50 260
+           L 150 260
+           C 150 252, 150 242, 150 232
+           C 152 215, 158 200, 160 182
+           C 162 162, 162 138, 160 118
+           C 160 104, 152 94, 138 92 Z"
         fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
 
-      {/* ── Left arm (viewer left = patient right) ── */}
+      {/* Left arm (viewer left = patient right) */}
       <path
-        d="
-          M 40 118
-          C 32 128, 24 152, 22 176
-          L 20 238
-          C 18 254, 26 262, 38 262
-          L 52 262
-          C 60 260, 62 250, 60 236
-          L 58 176
-          C 58 154, 54 128, 50 118
-          Z
-        "
+        d="M 40 118
+           C 32 128, 24 152, 22 176
+           L 20 238
+           C 18 254, 26 262, 38 262
+           L 52 262
+           C 60 260, 62 250, 60 236
+           L 58 176
+           C 58 154, 54 128, 50 118 Z"
         fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
 
-      {/* ── Right arm (viewer right = patient left) ── */}
+      {/* Right arm (viewer right = patient left) */}
       <path
-        d="
-          M 160 118
-          C 168 128, 176 152, 178 176
-          L 180 238
-          C 182 254, 174 262, 162 262
-          L 148 262
-          C 140 260, 138 250, 140 236
-          L 142 176
-          C 142 154, 146 128, 150 118
-          Z
-        "
+        d="M 160 118
+           C 168 128, 176 152, 178 176
+           L 180 238
+           C 182 254, 174 262, 162 262
+           L 148 262
+           C 140 260, 138 250, 140 236
+           L 142 176
+           C 142 154, 146 128, 150 118 Z"
         fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
 
-      {/* ── Left leg (viewer left = patient right) ── */}
+      {/* Left leg */}
       <path
-        d="
-          M 50 260
-          C 44 278, 40 306, 38 334
-          L 36 428
-          C 34 446, 46 452, 64 450
-          L 80 450
-          C 88 448, 90 440, 88 430
-          L 88 336
-          C 90 308, 92 280, 94 262
-          Z
-        "
+        d="M 50 260
+           C 44 278, 40 306, 38 334
+           L 36 428
+           C 34 446, 46 452, 64 450
+           L 80 450
+           C 88 448, 90 440, 88 430
+           L 88 336
+           C 90 308, 92 280, 94 262 Z"
         fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
 
-      {/* ── Right leg (viewer right = patient left) ── */}
+      {/* Right leg */}
       <path
-        d="
-          M 150 260
-          C 156 278, 160 306, 162 334
-          L 164 428
-          C 166 446, 154 452, 136 450
-          L 120 450
-          C 112 448, 110 440, 112 430
-          L 112 336
-          C 110 308, 108 280, 106 262
-          Z
-        "
+        d="M 150 260
+           C 156 278, 160 306, 162 334
+           L 164 428
+           C 166 446, 154 452, 136 450
+           L 120 450
+           C 112 448, 110 440, 112 430
+           L 112 336
+           C 110 308, 108 280, 106 262 Z"
         fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
 
-      {/* ── Subtle body landmarks (very faint, medical style) ── */}
       {/* Clavicle lines */}
-      <path
-        d="M 88 92 Q 74 100 64 98"
-        stroke={S} strokeWidth="0.9" fill="none" opacity="0.45" strokeLinecap="round"
-      />
-      <path
-        d="M 112 92 Q 126 100 136 98"
-        stroke={S} strokeWidth="0.9" fill="none" opacity="0.45" strokeLinecap="round"
-      />
-      {/* Center line — sternum/midline */}
-      <line
-        x1="100" y1="90" x2="100" y2="258"
-        stroke={S} strokeWidth="0.7" strokeDasharray="4 5" opacity="0.3"
-      />
-      {/* Hip crease lines */}
-      <path
-        d="M 56 256 Q 72 268 94 264"
-        stroke={S} strokeWidth="0.9" fill="none" opacity="0.35" strokeLinecap="round"
-      />
-      <path
-        d="M 144 256 Q 128 268 106 264"
-        stroke={S} strokeWidth="0.9" fill="none" opacity="0.35" strokeLinecap="round"
-      />
+      <path d="M 88 92 Q 74 100 64 98" stroke={S} strokeWidth="0.9" fill="none" opacity="0.4" strokeLinecap="round" />
+      <path d="M 112 92 Q 126 100 136 98" stroke={S} strokeWidth="0.9" fill="none" opacity="0.4" strokeLinecap="round" />
+      {/* Midline */}
+      <line x1="100" y1="90" x2="100" y2="258" stroke={S} strokeWidth="0.7" strokeDasharray="4 5" opacity="0.25" />
+      {/* Hip creases */}
+      <path d="M 56 256 Q 72 268 94 264" stroke={S} strokeWidth="0.9" fill="none" opacity="0.3" strokeLinecap="round" />
+      <path d="M 144 256 Q 128 268 106 264" stroke={S} strokeWidth="0.9" fill="none" opacity="0.3" strokeLinecap="round" />
     </svg>
   );
 }
 
-// ── Hotspot marker ────────────────────────────────────────────────────────────
+// ── Hotspot ───────────────────────────────────────────────────────────────────
 type SiteState = "selected" | "lastUsed" | "recent" | "default";
 
 function getSiteState(
-  name: string,
-  selected: string,
-  lastUsed: string | null,
-  recentSet: Set<string>,
+  name: string, selected: string, lastUsed: string | null, recentSet: Set<string>,
 ): SiteState {
-  if (name === selected)   return "selected";
-  if (name === lastUsed)   return "lastUsed";
-  if (recentSet.has(name)) return "recent";
+  if (name === selected)    return "selected";
+  if (name === lastUsed)    return "lastUsed";
+  if (recentSet.has(name))  return "recent";
   return "default";
 }
 
-const HOTSPOT_STYLES: Record<SiteState, React.CSSProperties> = {
+const DOT_STYLE: Record<SiteState, React.CSSProperties> = {
   selected: {
-    width: 26, height: 26, borderRadius: "50%",
-    background: "hsl(174 72% 40%)",
-    border: "2px solid hsl(174 72% 60%)",
-    boxShadow: "0 0 0 5px hsl(174 72% 40% / 0.22), 0 0 18px hsl(174 72% 40% / 0.45)",
+    width: 24, height: 24, borderRadius: "50%",
+    background: "hsl(174 72% 42%)",
+    border: "2px solid hsl(174 72% 65%)",
+    boxShadow: "0 0 0 6px hsl(174 72% 40% / 0.20), 0 0 20px hsl(174 72% 40% / 0.50)",
   },
   lastUsed: {
-    width: 26, height: 26, borderRadius: "50%",
-    background: "hsl(38 95% 55% / 0.18)",
+    width: 24, height: 24, borderRadius: "50%",
+    background: "hsl(38 95% 55% / 0.16)",
     border: "2.5px solid hsl(38 95% 55%)",
-    boxShadow: "0 0 0 4px hsl(38 95% 55% / 0.15)",
+    boxShadow: "0 0 0 4px hsl(38 95% 55% / 0.12)",
   },
   recent: {
-    width: 26, height: 26, borderRadius: "50%",
+    width: 24, height: 24, borderRadius: "50%",
     background: "hsl(220 13% 60% / 0.10)",
-    border: "1.5px solid hsl(220 13% 58%)",
+    border: "1.5px solid hsl(220 13% 55%)",
   },
   default: {
-    width: 26, height: 26, borderRadius: "50%",
-    background: "hsl(220 13% 60% / 0.06)",
-    border: "1.5px solid hsl(220 13% 36%)",
+    width: 24, height: 24, borderRadius: "50%",
+    background: "hsl(220 13% 60% / 0.05)",
+    border: "1.5px solid hsl(220 13% 34%)",
   },
 };
 
-interface HotspotProps {
-  site: SitePoint;
-  state: SiteState;
-  isSuggested: boolean;
-  onClick: () => void;
-}
-
-function Hotspot({ site, state, isSuggested, onClick }: HotspotProps) {
+function Hotspot({
+  site, state, isSuggested, onClick,
+}: {
+  site: SitePoint; state: SiteState; isSuggested: boolean; onClick: () => void;
+}) {
   return (
     <div
       style={{
@@ -253,9 +193,10 @@ function Hotspot({ site, state, isSuggested, onClick }: HotspotProps) {
         zIndex: state === "selected" ? 10 : state === "lastUsed" ? 9 : 8,
       }}
     >
-      {/* Larger invisible touch target wrapping the visible circle */}
+      {/* 42 px invisible touch target */}
       <motion.button
-        whileTap={{ scale: 0.82 }}
+        whileTap={{ scale: 0.75 }}
+        transition={{ type: "spring", stiffness: 400, damping: 20 }}
         onClick={onClick}
         data-testid={`site-${site.name.toLowerCase().replace(/\s+/g, "-")}`}
         title={site.name}
@@ -266,24 +207,20 @@ function Hotspot({ site, state, isSuggested, onClick }: HotspotProps) {
         }}
       >
         <motion.div
-          style={HOTSPOT_STYLES[state]}
-          animate={
-            state === "selected"
-              ? { scale: [1, 1.08, 1] }
-              : {}
-          }
-          transition={{ duration: 0.4 }}
+          animate={state === "selected" ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          style={DOT_STYLE[state]}
         />
       </motion.button>
 
-      {/* Suggested badge — small emerald dot top-right */}
+      {/* Suggested dot badge */}
       {isSuggested && state !== "selected" && (
         <div
           style={{
-            position: "absolute", top: 2, right: 2,
-            width: 10, height: 10, borderRadius: "50%",
-            background: "hsl(152 60% 46%)",
-            border: "1.5px solid hsl(220 14% 15%)",
+            position: "absolute", top: 4, right: 4,
+            width: 9, height: 9, borderRadius: "50%",
+            background: "hsl(152 58% 44%)",
+            border: "1.5px solid hsl(220 14% 13%)",
             pointerEvents: "none",
           }}
         />
@@ -292,7 +229,7 @@ function Hotspot({ site, state, isSuggested, onClick }: HotspotProps) {
   );
 }
 
-// ── Duplicate site warning ────────────────────────────────────────────────────
+// ── Duplicate warning ─────────────────────────────────────────────────────────
 function DuplicateWarning({
   siteName, onCancel, onConfirm,
 }: {
@@ -300,11 +237,11 @@ function DuplicateWarning({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 6 }}
-      transition={{ type: "spring", stiffness: 340, damping: 30 }}
-      className="mx-6 mb-2 rounded-2xl border border-orange-400/25 bg-orange-500/8 p-4"
+      transition={{ type: "spring", stiffness: 360, damping: 32 }}
+      className="mx-6 mb-3 rounded-2xl border border-orange-400/22 bg-orange-500/7 p-4"
     >
       <div className="flex items-start gap-3 mb-3.5">
         <div className="w-7 h-7 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 flex-shrink-0 mt-0.5">
@@ -314,7 +251,7 @@ function DuplicateWarning({
           <p className="text-[13px] font-semibold text-foreground/90 leading-snug">
             You used this site last time.
           </p>
-          <p className="text-[12px] text-muted-foreground/65 mt-0.5 leading-relaxed">
+          <p className="text-[12px] text-muted-foreground/60 mt-0.5 leading-relaxed">
             <span className="text-orange-400 font-medium">{siteName}</span> was your last injection. Rotating sites reduces irritation.
           </p>
         </div>
@@ -339,12 +276,12 @@ function DuplicateWarning({
   );
 }
 
-// ── Legend item ───────────────────────────────────────────────────────────────
-function LegendDot({ style, label }: { style: React.CSSProperties; label: string }) {
+// ── Legend row ────────────────────────────────────────────────────────────────
+function LegendDot({ dotStyle, label }: { dotStyle: React.CSSProperties; label: string }) {
   return (
     <div className="flex items-center gap-1.5">
-      <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, ...style }} />
-      <span className="text-[10px] text-muted-foreground/55 font-medium">{label}</span>
+      <div style={{ width: 9, height: 9, borderRadius: "50%", flexShrink: 0, ...dotStyle }} />
+      <span className="text-[10px] text-muted-foreground/45 font-medium tracking-wide">{label}</span>
     </div>
   );
 }
@@ -355,19 +292,19 @@ function formatRelative(iso: string) {
   if (h < 1) return "just now";
   if (h < 24) return `${h}h ago`;
   const d = Math.floor(h / 24);
-  return d === 1 ? "yesterday" : `${d} days ago`;
+  return d === 1 ? "yesterday" : `${d}d ago`;
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// Body map fixed pixel dimensions (SVG viewBox is 200 × 480)
+const MAP_W = 148;
+const MAP_H = Math.round(MAP_W * (480 / 200)); // 355
+
+// ── Main sheet ────────────────────────────────────────────────────────────────
 export interface BodyMapSheetProps {
   selected: string;
   onSelect: (site: string) => void;
   onClose: () => void;
 }
-
-// Body map container dimensions — keeps SVG and hotspots in the same space
-const MAP_W = 148;
-const MAP_H = Math.round(MAP_W * (480 / 200)); // = 355
 
 export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps) {
   const { injections } = useInjections();
@@ -389,7 +326,8 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
       setPendingConfirm(name);
     } else {
       onSelect(name);
-      setTimeout(onClose, 180);
+      // brief pause so the pill + glow are visible before the sheet closes
+      setTimeout(onClose, 340);
     }
   };
 
@@ -397,71 +335,88 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
     if (!pendingConfirm) return;
     onSelect(pendingConfirm);
     setPendingConfirm(null);
-    setTimeout(onClose, 180);
+    setTimeout(onClose, 340);
   };
 
   return (
+    // ── Backdrop ──
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
+      transition={{ duration: 0.22 }}
+      className="fixed inset-0 z-50 flex items-end justify-center"
+      style={{ background: "hsl(220 20% 4% / 0.78)", backdropFilter: "blur(6px)" }}
       onClick={onClose}
     >
+      {/* ── Sheet ── */}
       <motion.div
-        initial={{ y: 120, opacity: 0 }}
+        initial={{ y: 160, opacity: 0.4 }}
         animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 120, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 32 }}
+        exit={{ y: 160, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 280, damping: 30, mass: 0.9 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[430px] bg-card rounded-t-[28px] border border-border/50 flex flex-col overflow-y-auto"
-        style={{ maxHeight: "92vh" }}
+        className="w-full max-w-[430px] flex flex-col overflow-y-auto"
+        style={{
+          maxHeight: "94vh",
+          background: "hsl(220 16% 10%)",
+          borderRadius: "32px 32px 0 0",
+          border: "1px solid hsl(220 14% 20%)",
+          boxShadow: "0 -24px 80px hsl(220 20% 3% / 0.85), 0 -4px 16px hsl(220 20% 3% / 0.5)",
+        }}
       >
-        {/* ── Handle ── */}
+        {/* Handle */}
         <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
-          <div className="w-9 h-[3px] bg-border/50 rounded-full" />
+          <div style={{ width: 36, height: 4, borderRadius: 9999, background: "hsl(220 14% 28%)" }} />
         </div>
 
-        {/* ── Header ── */}
-        <div className="flex items-center justify-between px-6 pb-3 flex-shrink-0">
+        {/* Header */}
+        <div className="flex items-start justify-between px-6 pb-4 flex-shrink-0">
           <div>
-            <h2 className="text-[18px] font-bold tracking-tight">Injection Site</h2>
-            <p className="text-[12px] text-muted-foreground/55 mt-0.5">Tap to select · front view</p>
+            <h2 className="text-[19px] font-bold tracking-tight text-foreground leading-tight">
+              Injection Site
+            </h2>
+            <p className="text-[12px] mt-1 font-medium" style={{ color: "hsl(220 10% 52%)" }}>
+              Choose the area you used for this dose
+            </p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-muted/80 flex items-center justify-center text-muted-foreground"
+            className="mt-0.5 w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: "hsl(220 14% 18%)", color: "hsl(220 10% 52%)" }}
           >
-            <X size={14} strokeWidth={2.5} />
+            <X size={13} strokeWidth={2.5} />
           </button>
         </div>
 
-        {/* ── Suggestion banner ── */}
+        {/* Suggestion banner */}
         {suggested && (
-          <div className="mx-6 mb-3 flex-shrink-0 flex items-center gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/7 px-3.5 py-2.5">
-            <Sparkles size={13} className="text-emerald-400 flex-shrink-0" strokeWidth={2} />
-            <p className="text-[12px] font-medium text-emerald-400/85 leading-snug">
-              Suggested: <span className="font-bold text-emerald-400">{suggested}</span>
+          <div
+            className="mx-6 mb-3 flex-shrink-0 flex items-center gap-2.5 px-3.5 py-2.5"
+            style={{
+              borderRadius: 16,
+              border: "1px solid hsl(152 50% 38% / 0.25)",
+              background: "hsl(152 50% 38% / 0.07)",
+            }}
+          >
+            <Sparkles size={13} strokeWidth={2} style={{ color: "hsl(152 55% 52%)", flexShrink: 0 }} />
+            <p className="text-[12px] font-medium leading-snug" style={{ color: "hsl(152 55% 52%)" }}>
+              Suggested: <span className="font-bold">{suggested}</span>
             </p>
           </div>
         )}
 
-        {/* ── Orientation labels ── */}
-        <div className="flex justify-between px-8 mb-1 flex-shrink-0">
-          <span className="text-[9px] font-semibold text-muted-foreground/40 uppercase tracking-widest">← Your Right</span>
-          <span className="text-[9px] font-semibold text-muted-foreground/40 uppercase tracking-widest">Your Left →</span>
-        </div>
+        {/* Instruction label */}
+        <p
+          className="text-center text-[11px] font-semibold tracking-widest uppercase mb-2 flex-shrink-0"
+          style={{ color: "hsl(220 10% 40%)" }}
+        >
+          Tap an injection site
+        </p>
 
-        {/* ── Body map ── */}
-        <div className="flex justify-center pb-2 flex-shrink-0">
-          <div
-            style={{
-              position: "relative",
-              width: MAP_W,
-              height: MAP_H,
-              flexShrink: 0,
-            }}
-          >
+        {/* Body map */}
+        <div className="flex justify-center pb-3 flex-shrink-0">
+          <div style={{ position: "relative", width: MAP_W, height: MAP_H, flexShrink: 0 }}>
             <MedicalBodySVG />
             {SITE_POINTS.map((site) => {
               const state = getSiteState(site.name, selected, lastUsed, recentSet);
@@ -478,27 +433,64 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
           </div>
         </div>
 
-        {/* ── Legend ── */}
-        <div className="flex items-center justify-center gap-4 px-6 py-3 border-t border-border/30 flex-shrink-0">
+        {/* Selected pill — appears below body map after tap */}
+        <div className="flex justify-center mb-3 flex-shrink-0" style={{ minHeight: 36 }}>
+          <AnimatePresence mode="wait">
+            {selected && !pendingConfirm && (
+              <motion.div
+                key={selected}
+                initial={{ opacity: 0, scale: 0.88, y: 6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: 3 }}
+                transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  paddingLeft: 18,
+                  paddingRight: 18,
+                  paddingTop: 8,
+                  paddingBottom: 8,
+                  borderRadius: 9999,
+                  background: "hsl(174 72% 40%)",
+                  boxShadow: "0 0 20px hsl(174 72% 40% / 0.35)",
+                  cursor: "pointer",
+                }}
+                onClick={() => { onSelect(selected); onClose(); }}
+              >
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: "hsl(174 72% 80%)", opacity: 0.8 }} />
+                <span style={{ fontSize: 13, fontWeight: 700, color: "hsl(174 72% 96%)", letterSpacing: "-0.01em" }}>
+                  Selected: {selected}
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Legend */}
+        <div
+          className="flex items-center justify-center gap-4 px-6 py-3 flex-shrink-0"
+          style={{ borderTop: "1px solid hsl(220 14% 16%)" }}
+        >
           <LegendDot
-            style={{ background: "hsl(174 72% 40%)", boxShadow: "0 0 6px hsl(174 72% 40% / 0.5)" }}
+            dotStyle={{ background: "hsl(174 72% 40%)", boxShadow: "0 0 6px hsl(174 72% 40% / 0.55)" }}
             label="Selected"
           />
           <LegendDot
-            style={{ background: "hsl(38 95% 55% / 0.2)", border: "1.5px solid hsl(38 95% 55%)" }}
+            dotStyle={{ background: "transparent", border: "1.5px solid hsl(38 95% 55%)" }}
             label="Last Used"
           />
           <LegendDot
-            style={{ background: "transparent", border: "1.5px solid hsl(220 13% 58%)" }}
+            dotStyle={{ background: "transparent", border: "1.5px solid hsl(220 13% 55%)" }}
             label="Recent"
           />
           <LegendDot
-            style={{ background: "hsl(152 60% 46%)" }}
+            dotStyle={{ background: "hsl(152 58% 44%)" }}
             label="Suggested"
           />
         </div>
 
-        {/* ── Duplicate warning ── */}
+        {/* Duplicate warning */}
         <AnimatePresence>
           {pendingConfirm && (
             <DuplicateWarning
@@ -509,37 +501,28 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
           )}
         </AnimatePresence>
 
-        {/* ── Last used footer ── */}
+        {/* Last used footer */}
         {lastUsed && !pendingConfirm && (
-          <div className="px-6 py-3 border-t border-border/30 flex items-center justify-between flex-shrink-0">
+          <div
+            className="px-6 py-3 flex items-center justify-between flex-shrink-0"
+            style={{ borderTop: "1px solid hsl(220 14% 16%)" }}
+          >
             <div>
-              <p className="text-[10px] font-semibold text-muted-foreground/45 uppercase tracking-widest mb-0.5">Last Used</p>
-              <p className="text-[14px] font-semibold">{lastUsed}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: "hsl(220 10% 38%)" }}>
+                Last Used
+              </p>
+              <p className="text-[14px] font-semibold text-foreground/85">{lastUsed}</p>
             </div>
             {lastUsedDate && (
-              <p className="text-[12px] text-muted-foreground/50">{formatRelative(lastUsedDate)}</p>
+              <p className="text-[12px]" style={{ color: "hsl(220 10% 42%)" }}>
+                {formatRelative(lastUsedDate)}
+              </p>
             )}
           </div>
         )}
 
-        {/* ── Selection confirm bar ── */}
-        {selected && !pendingConfirm && (
-          <div className="px-6 pb-6 pt-1 flex-shrink-0">
-            <div className="flex items-center justify-between bg-primary/10 border border-primary/20 rounded-2xl px-4 py-3">
-              <div>
-                <p className="text-[10px] font-semibold text-primary/60 uppercase tracking-widest mb-0.5">Selected</p>
-                <p className="text-[15px] font-bold text-primary leading-tight">{selected}</p>
-              </div>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => { onSelect(selected); onClose(); }}
-                className="bg-primary text-primary-foreground text-[13px] font-semibold px-4 py-2 rounded-xl"
-              >
-                Confirm
-              </motion.button>
-            </div>
-          </div>
-        )}
+        {/* Bottom safe area spacing */}
+        <div className="h-5 flex-shrink-0" />
       </motion.div>
     </motion.div>
   );
