@@ -308,7 +308,7 @@ function Hotspot({
         data-testid={`site-${site.name.toLowerCase().replace(/[\s.]+/g, "-")}`}
         title={site.name}
         style={{
-          width: 34, height: 34, borderRadius: "50%",
+          width: 26, height: 26, borderRadius: "50%",
           display: "flex", alignItems: "center", justifyContent: "center",
           background: "transparent", border: "none", padding: 0, cursor: "pointer",
         }}
