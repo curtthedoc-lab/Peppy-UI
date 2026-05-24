@@ -71,37 +71,48 @@ function NumInput({
   );
 }
 
-function ResultCard({ result }: { result: { mlRequired: number; syringeUnits: number } }) {
+function ResultCard({ result }: { result: { concentration: number; mlRequired: number; syringeUnits: number } }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: "spring", stiffness: 300, damping: 26 }}
-      className="bg-primary/8 border border-primary/20 rounded-3xl p-5 flex gap-4"
+      className="bg-primary/8 border border-primary/20 rounded-3xl p-5 flex flex-col gap-4"
     >
-      <div className="flex-1 flex flex-col items-center gap-1.5 border-r border-primary/15 pr-4">
-        <div className="w-9 h-9 rounded-2xl bg-primary/15 flex items-center justify-center text-primary">
-          <Droplet size={17} strokeWidth={2} />
+      <div className="flex gap-4">
+        <div className="flex-1 flex flex-col items-center gap-1.5 border-r border-primary/15 pr-4">
+          <div className="w-9 h-9 rounded-2xl bg-primary/15 flex items-center justify-center text-primary">
+            <Droplet size={17} strokeWidth={2} />
+          </div>
+          <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-widest uppercase mt-1">
+            mL Required
+          </p>
+          <p className="text-[32px] font-bold tracking-[-0.03em] text-primary leading-none">
+            {result.mlRequired.toFixed(3)}
+          </p>
+          <p className="text-[12px] text-muted-foreground/60">millilitres</p>
         </div>
-        <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-widest uppercase mt-1">
-          mL Required
-        </p>
-        <p className="text-[32px] font-bold tracking-[-0.03em] text-primary leading-none">
-          {result.mlRequired.toFixed(3)}
-        </p>
-        <p className="text-[12px] text-muted-foreground/60">millilitres</p>
+        <div className="flex-1 flex flex-col items-center gap-1.5 pl-4">
+          <div className="w-9 h-9 rounded-2xl bg-primary/15 flex items-center justify-center text-primary">
+            <Syringe size={17} strokeWidth={2} />
+          </div>
+          <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-widest uppercase mt-1">
+            Syringe Units
+          </p>
+          <p className="text-[32px] font-bold tracking-[-0.03em] text-primary leading-none">
+            {result.syringeUnits.toFixed(1)}
+          </p>
+          <p className="text-[12px] text-muted-foreground/60">U-100 units</p>
+        </div>
       </div>
-      <div className="flex-1 flex flex-col items-center gap-1.5 pl-4">
-        <div className="w-9 h-9 rounded-2xl bg-primary/15 flex items-center justify-center text-primary">
-          <Syringe size={17} strokeWidth={2} />
-        </div>
-        <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-widest uppercase mt-1">
-          Syringe Units
+      <div className="border-t border-primary/15 pt-4 flex flex-col items-center gap-1">
+        <p className="text-[11px] font-semibold text-muted-foreground/70 tracking-widest uppercase">
+          Concentration
         </p>
-        <p className="text-[32px] font-bold tracking-[-0.03em] text-primary leading-none">
-          {result.syringeUnits.toFixed(1)}
+        <p className="text-[28px] font-bold tracking-[-0.03em] text-primary leading-none">
+          {result.concentration.toFixed(2)}
         </p>
-        <p className="text-[12px] text-muted-foreground/60">U-100 units</p>
+        <p className="text-[12px] text-muted-foreground/60">mg / mL</p>
       </div>
     </motion.div>
   );
@@ -142,12 +153,14 @@ export function Calculator() {
   });
 
   const onSubmit = (data: FormData) => {
-    const vialMcg = Number(data.vialMg) * 1000;
-    const concentration = vialMcg / Number(data.bacMl);
-    const mlRequired = Number(data.doseMcg) / concentration;
+    const vialMg = Number(data.vialMg);
+    const bacMl = Number(data.bacMl);
+    const doseMcg = Number(data.doseMcg);
+    const concentration = vialMg / bacMl;
+    const mlRequired = doseMcg / (concentration * 1000);
     const syringeUnits = mlRequired * 100;
 
-    const calc = { mlRequired, syringeUnits, vialMg: Number(data.vialMg), bacMl: Number(data.bacMl), doseMcg: Number(data.doseMcg) };
+    const calc = { vialMg, bacMl, doseMcg, concentration, mlRequired, syringeUnits };
     setResult(calc);
     addCalculation(calc);
   };

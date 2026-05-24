@@ -5,6 +5,7 @@ export interface Calculation {
   vialMg: number;
   bacMl: number;
   doseMcg: number;
+  concentration: number;
   mlRequired: number;
   syringeUnits: number;
   date: string;
