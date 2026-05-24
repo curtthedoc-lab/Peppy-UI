@@ -3,111 +3,199 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertTriangle, Sparkles } from "lucide-react";
 import { useInjections, Injection } from "@/hooks/useInjections";
 
+// ── Site definitions ──────────────────────────────────────────────────────────
+// px / py are fractions of viewBox width (200) and height (480)
 interface SitePoint {
   name: string;
   px: number;
   py: number;
-  shortLabel: string;
 }
 
 const SITE_POINTS: SitePoint[] = [
-  { name: "Right Deltoid",  px: 44  / 200, py: 106 / 410, shortLabel: "R.Delt" },
-  { name: "Left Deltoid",   px: 156 / 200, py: 106 / 410, shortLabel: "L.Delt" },
-  { name: "Right Abdomen",  px: 83  / 200, py: 185 / 410, shortLabel: "R.Abd"  },
-  { name: "Left Abdomen",   px: 117 / 200, py: 185 / 410, shortLabel: "L.Abd"  },
-  { name: "Right Flank",    px: 55  / 200, py: 207 / 410, shortLabel: "R.Flnk" },
-  { name: "Left Flank",     px: 145 / 200, py: 207 / 410, shortLabel: "L.Flnk" },
-  { name: "Right Glute",    px: 72  / 200, py: 252 / 410, shortLabel: "R.Glut" },
-  { name: "Left Glute",     px: 128 / 200, py: 252 / 410, shortLabel: "L.Glut" },
-  { name: "Right Thigh",    px: 76  / 200, py: 312 / 410, shortLabel: "R.Thgh" },
-  { name: "Left Thigh",     px: 124 / 200, py: 312 / 410, shortLabel: "L.Thgh" },
+  // Patient's right = viewer's left arm
+  { name: "Right Deltoid",  px: 38  / 200, py: 108 / 480 },
+  // Patient's left  = viewer's right arm
+  { name: "Left Deltoid",   px: 162 / 200, py: 108 / 480 },
+  { name: "Right Abdomen",  px: 78  / 200, py: 196 / 480 },
+  { name: "Left Abdomen",   px: 122 / 200, py: 196 / 480 },
+  { name: "Right Flank",    px: 54  / 200, py: 214 / 480 },
+  { name: "Left Flank",     px: 146 / 200, py: 214 / 480 },
+  { name: "Right Glute",    px: 64  / 200, py: 266 / 480 },
+  { name: "Left Glute",     px: 136 / 200, py: 266 / 480 },
+  { name: "Right Thigh",    px: 72  / 200, py: 348 / 480 },
+  { name: "Left Thigh",     px: 128 / 200, py: 348 / 480 },
 ];
 
 const ALL_SITE_NAMES = SITE_POINTS.map((s) => s.name);
 
-// ── Rotation logic ────────────────────────────────────────────────────────────
+// ── Rotation suggestion ───────────────────────────────────────────────────────
 function computeSuggestedSite(injections: Injection[]): string | null {
   if (injections.length === 0) return ALL_SITE_NAMES[0];
-
-  // Build a map of site → index of first (most recent) occurrence
   const lastUsedIndex: Record<string, number> = {};
   for (let i = 0; i < injections.length; i++) {
-    const site = injections[i].site;
-    if (!(site in lastUsedIndex)) lastUsedIndex[site] = i;
+    const s = injections[i].site;
+    if (!(s in lastUsedIndex)) lastUsedIndex[s] = i;
   }
-
-  // Prefer sites never used at all
   const neverUsed = ALL_SITE_NAMES.filter((s) => !(s in lastUsedIndex));
   if (neverUsed.length > 0) return neverUsed[0];
-
-  // Otherwise suggest the site with the highest index (least recently used)
   const lastSite = injections[0].site;
   return (
-    ALL_SITE_NAMES.filter((s) => s !== lastSite).sort(
-      (a, b) => lastUsedIndex[b] - lastUsedIndex[a],
-    )[0] ?? null
+    ALL_SITE_NAMES
+      .filter((s) => s !== lastSite)
+      .sort((a, b) => lastUsedIndex[b] - lastUsedIndex[a])[0] ?? null
   );
 }
 
-// ── Body SVG ──────────────────────────────────────────────────────────────────
-function BodyOutlineSVG() {
-  const fill   = "hsl(220 14% 22%)";
-  const stroke = "hsl(220 14% 34%)";
-  const sw     = "1.5";
+// ── Medical-grade body silhouette SVG ─────────────────────────────────────────
+// viewBox: 0 0 200 480  — front-facing neutral figure, no face features
+function MedicalBodySVG() {
+  const F = "hsl(215 22% 27%)";   // fill — warm dark slate
+  const S = "hsl(215 22% 52%)";   // stroke — visible contrast
+  const W = "1.8";                 // stroke width
 
   return (
-    <svg viewBox="0 0 200 410" className="w-full h-full" style={{ display: "block" }} aria-hidden>
-      {/* Head */}
-      <circle cx="100" cy="34" r="25" fill={fill} stroke={stroke} strokeWidth={sw} />
-      <circle cx="92"  cy="30" r="2.5" fill="hsl(220 14% 42%)" />
-      <circle cx="108" cy="30" r="2.5" fill="hsl(220 14% 42%)" />
-      <path d="M95 40 Q100 44 105 40" stroke="hsl(220 14% 42%)" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+    <svg
+      viewBox="0 0 200 480"
+      style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+      aria-hidden
+    >
+      <defs>
+        <filter id="body-inner-shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
+          <feOffset dx="0" dy="2" result="offset" />
+          <feComposite in="offset" in2="SourceAlpha" operator="in" result="shadow" />
+          <feBlend in="SourceGraphic" in2="shadow" mode="multiply" />
+        </filter>
+      </defs>
 
-      {/* Neck */}
-      <path d="M93 58 L93 70 L107 70 L107 58 Z" fill={fill} />
-
-      {/* Torso */}
-      <path
-        d="M65 70 C52 72 46 86 46 102 L44 178 C44 188 50 194 58 198 L60 240 L140 240 L142 198
-           C150 194 156 188 156 178 L154 102 C154 86 148 72 135 70 Z"
-        fill={fill} stroke={stroke} strokeWidth={sw} strokeLinejoin="round"
+      {/* ── Head (smooth oval, no face) ── */}
+      <ellipse
+        cx="100" cy="40" rx="26" ry="30"
+        fill={F} stroke={S} strokeWidth={W}
       />
 
-      {/* Left arm */}
+      {/* ── Neck ── */}
       <path
-        d="M46 102 C40 110 36 126 34 150 L32 204 C31 216 42 220 54 218 L58 216 L58 198
-           C50 194 44 188 44 178 Z"
-        fill={fill} stroke={stroke} strokeWidth={sw} strokeLinejoin="round"
+        d="M 88 68 C 86 74, 85 80, 86 86 L 114 86 C 115 80, 114 74, 112 68 Z"
+        fill={F}
+      />
+      {/* neck-to-shoulder blend */}
+      <path
+        d="M 86 86 C 78 86, 68 88, 62 92 L 138 92 C 132 88, 122 86, 114 86 Z"
+        fill={F}
       />
 
-      {/* Right arm */}
+      {/* ── Torso ── wide at chest, nipped at waist, slight hip flare */}
       <path
-        d="M154 102 C160 110 164 126 166 150 L168 204 C169 216 158 220 146 218 L142 216 L142 198
-           C150 194 156 188 156 178 Z"
-        fill={fill} stroke={stroke} strokeWidth={sw} strokeLinejoin="round"
+        d="
+          M 62 92
+          C 48 94, 40 104, 40 118
+          C 38 138, 38 162, 40 182
+          C 42 200, 48 215, 50 232
+          C 50 242, 50 252, 50 260
+          L 150 260
+          C 150 252, 150 242, 150 232
+          C 152 215, 158 200, 160 182
+          C 162 162, 162 138, 160 118
+          C 160 104, 152 94, 138 92
+          Z
+        "
+        fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
 
-      {/* Left leg */}
+      {/* ── Left arm (viewer left = patient right) ── */}
       <path
-        d="M60 240 L54 392 C53 402 66 405 80 403 L90 403 L94 240 Z"
-        fill={fill} stroke={stroke} strokeWidth={sw} strokeLinejoin="round"
+        d="
+          M 40 118
+          C 32 128, 24 152, 22 176
+          L 20 238
+          C 18 254, 26 262, 38 262
+          L 52 262
+          C 60 260, 62 250, 60 236
+          L 58 176
+          C 58 154, 54 128, 50 118
+          Z
+        "
+        fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
 
-      {/* Right leg */}
+      {/* ── Right arm (viewer right = patient left) ── */}
       <path
-        d="M140 240 L146 392 C147 402 134 405 120 403 L110 403 L106 240 Z"
-        fill={fill} stroke={stroke} strokeWidth={sw} strokeLinejoin="round"
+        d="
+          M 160 118
+          C 168 128, 176 152, 178 176
+          L 180 238
+          C 182 254, 174 262, 162 262
+          L 148 262
+          C 140 260, 138 250, 140 236
+          L 142 176
+          C 142 154, 146 128, 150 118
+          Z
+        "
+        fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
 
-      {/* Details */}
-      <line x1="100" y1="70" x2="100" y2="238" stroke="hsl(220 14% 30%)" strokeWidth="0.8" strokeDasharray="3 4" />
-      <path d="M94 70 Q80 76 66 74" stroke="hsl(220 14% 32%)" strokeWidth="1" fill="none" />
-      <path d="M106 70 Q120 76 134 74" stroke="hsl(220 14% 32%)" strokeWidth="1" fill="none" />
+      {/* ── Left leg (viewer left = patient right) ── */}
+      <path
+        d="
+          M 50 260
+          C 44 278, 40 306, 38 334
+          L 36 428
+          C 34 446, 46 452, 64 450
+          L 80 450
+          C 88 448, 90 440, 88 430
+          L 88 336
+          C 90 308, 92 280, 94 262
+          Z
+        "
+        fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
+      />
+
+      {/* ── Right leg (viewer right = patient left) ── */}
+      <path
+        d="
+          M 150 260
+          C 156 278, 160 306, 162 334
+          L 164 428
+          C 166 446, 154 452, 136 450
+          L 120 450
+          C 112 448, 110 440, 112 430
+          L 112 336
+          C 110 308, 108 280, 106 262
+          Z
+        "
+        fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
+      />
+
+      {/* ── Subtle body landmarks (very faint, medical style) ── */}
+      {/* Clavicle lines */}
+      <path
+        d="M 88 92 Q 74 100 64 98"
+        stroke={S} strokeWidth="0.9" fill="none" opacity="0.45" strokeLinecap="round"
+      />
+      <path
+        d="M 112 92 Q 126 100 136 98"
+        stroke={S} strokeWidth="0.9" fill="none" opacity="0.45" strokeLinecap="round"
+      />
+      {/* Center line — sternum/midline */}
+      <line
+        x1="100" y1="90" x2="100" y2="258"
+        stroke={S} strokeWidth="0.7" strokeDasharray="4 5" opacity="0.3"
+      />
+      {/* Hip crease lines */}
+      <path
+        d="M 56 256 Q 72 268 94 264"
+        stroke={S} strokeWidth="0.9" fill="none" opacity="0.35" strokeLinecap="round"
+      />
+      <path
+        d="M 144 256 Q 128 268 106 264"
+        stroke={S} strokeWidth="0.9" fill="none" opacity="0.35" strokeLinecap="round"
+      />
     </svg>
   );
 }
 
-// ── Hotspot ───────────────────────────────────────────────────────────────────
+// ── Hotspot marker ────────────────────────────────────────────────────────────
 type SiteState = "selected" | "lastUsed" | "recent" | "default";
 
 function getSiteState(
@@ -116,11 +204,36 @@ function getSiteState(
   lastUsed: string | null,
   recentSet: Set<string>,
 ): SiteState {
-  if (name === selected)  return "selected";
-  if (name === lastUsed)  return "lastUsed";
+  if (name === selected)   return "selected";
+  if (name === lastUsed)   return "lastUsed";
   if (recentSet.has(name)) return "recent";
   return "default";
 }
+
+const HOTSPOT_STYLES: Record<SiteState, React.CSSProperties> = {
+  selected: {
+    width: 26, height: 26, borderRadius: "50%",
+    background: "hsl(174 72% 40%)",
+    border: "2px solid hsl(174 72% 60%)",
+    boxShadow: "0 0 0 5px hsl(174 72% 40% / 0.22), 0 0 18px hsl(174 72% 40% / 0.45)",
+  },
+  lastUsed: {
+    width: 26, height: 26, borderRadius: "50%",
+    background: "hsl(38 95% 55% / 0.18)",
+    border: "2.5px solid hsl(38 95% 55%)",
+    boxShadow: "0 0 0 4px hsl(38 95% 55% / 0.15)",
+  },
+  recent: {
+    width: 26, height: 26, borderRadius: "50%",
+    background: "hsl(220 13% 60% / 0.10)",
+    border: "1.5px solid hsl(220 13% 58%)",
+  },
+  default: {
+    width: 26, height: 26, borderRadius: "50%",
+    background: "hsl(220 13% 60% / 0.06)",
+    border: "1.5px solid hsl(220 13% 36%)",
+  },
+};
 
 interface HotspotProps {
   site: SitePoint;
@@ -130,14 +243,6 @@ interface HotspotProps {
 }
 
 function Hotspot({ site, state, isSuggested, onClick }: HotspotProps) {
-  const colorMap: Record<SiteState, { bg: string; border: string; text: string; ring: string }> = {
-    selected: { bg: "bg-primary",     border: "border-primary",    text: "text-primary-foreground", ring: "ring-2 ring-primary/40" },
-    lastUsed: { bg: "bg-orange-500",  border: "border-orange-400", text: "text-white",               ring: "ring-2 ring-orange-400/40" },
-    recent:   { bg: "bg-transparent", border: "border-slate-400",  text: "text-slate-400",           ring: "" },
-    default:  { bg: "bg-transparent", border: "border-slate-600",  text: "text-slate-500",           ring: "" },
-  };
-  const c = colorMap[state];
-
   return (
     <div
       style={{
@@ -148,58 +253,69 @@ function Hotspot({ site, state, isSuggested, onClick }: HotspotProps) {
         zIndex: state === "selected" ? 10 : state === "lastUsed" ? 9 : 8,
       }}
     >
+      {/* Larger invisible touch target wrapping the visible circle */}
       <motion.button
-        whileTap={{ scale: 0.85 }}
+        whileTap={{ scale: 0.82 }}
         onClick={onClick}
         data-testid={`site-${site.name.toLowerCase().replace(/\s+/g, "-")}`}
         title={site.name}
-        style={{ width: 34, height: 34, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
-        className={`border-2 ${c.bg} ${c.border} ${c.text} ${c.ring} transition-all duration-150`}
+        style={{
+          width: 42, height: 42, borderRadius: "50%",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: "transparent", border: "none", padding: 0, cursor: "pointer",
+        }}
       >
-        <span style={{ fontSize: 7, fontWeight: 700, lineHeight: 1, textAlign: "center", letterSpacing: "-0.02em", userSelect: "none" }}>
-          {site.shortLabel}
-        </span>
+        <motion.div
+          style={HOTSPOT_STYLES[state]}
+          animate={
+            state === "selected"
+              ? { scale: [1, 1.08, 1] }
+              : {}
+          }
+          transition={{ duration: 0.4 }}
+        />
       </motion.button>
 
-      {/* Suggested badge */}
+      {/* Suggested badge — small emerald dot top-right */}
       {isSuggested && state !== "selected" && (
         <div
-          style={{ position: "absolute", top: -6, right: -6, width: 14, height: 14, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
-          className="bg-emerald-500 border border-card"
-        >
-          <Sparkles size={8} className="text-white" strokeWidth={2.5} />
-        </div>
+          style={{
+            position: "absolute", top: 2, right: 2,
+            width: 10, height: 10, borderRadius: "50%",
+            background: "hsl(152 60% 46%)",
+            border: "1.5px solid hsl(220 14% 15%)",
+            pointerEvents: "none",
+          }}
+        />
       )}
     </div>
   );
 }
 
-// ── Duplicate-site warning dialog ─────────────────────────────────────────────
-interface DuplicateWarningProps {
-  siteName: string;
-  onCancel: () => void;
-  onConfirm: () => void;
-}
-
-function DuplicateWarning({ siteName, onCancel, onConfirm }: DuplicateWarningProps) {
+// ── Duplicate site warning ────────────────────────────────────────────────────
+function DuplicateWarning({
+  siteName, onCancel, onConfirm,
+}: {
+  siteName: string; onCancel: () => void; onConfirm: () => void;
+}) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 8 }}
+      exit={{ opacity: 0, y: 6 }}
       transition={{ type: "spring", stiffness: 340, damping: 30 }}
-      className="mx-4 mb-2 bg-orange-500/10 border border-orange-400/30 rounded-2xl p-4"
+      className="mx-6 mb-2 rounded-2xl border border-orange-400/25 bg-orange-500/8 p-4"
     >
-      <div className="flex items-start gap-3 mb-4">
-        <div className="w-8 h-8 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 flex-shrink-0 mt-0.5">
-          <AlertTriangle size={15} strokeWidth={2.5} />
+      <div className="flex items-start gap-3 mb-3.5">
+        <div className="w-7 h-7 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 flex-shrink-0 mt-0.5">
+          <AlertTriangle size={13} strokeWidth={2.5} />
         </div>
         <div>
-          <p className="text-[14px] font-semibold leading-snug text-foreground/90">
+          <p className="text-[13px] font-semibold text-foreground/90 leading-snug">
             You used this site last time.
           </p>
-          <p className="text-[12px] text-muted-foreground/70 mt-1 leading-relaxed">
-            <span className="font-medium text-orange-400">{siteName}</span> was your most recent injection site. Rotating sites helps reduce tissue irritation.
+          <p className="text-[12px] text-muted-foreground/65 mt-0.5 leading-relaxed">
+            <span className="text-orange-400 font-medium">{siteName}</span> was your last injection. Rotating sites reduces irritation.
           </p>
         </div>
       </div>
@@ -207,14 +323,14 @@ function DuplicateWarning({ siteName, onCancel, onConfirm }: DuplicateWarningPro
         <button
           onClick={onCancel}
           data-testid="button-duplicate-cancel"
-          className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-card border border-border/60 text-muted-foreground transition-all active:scale-95"
+          className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-card border border-border/50 text-muted-foreground active:scale-95 transition-transform"
         >
           Cancel
         </button>
         <button
           onClick={onConfirm}
           data-testid="button-duplicate-confirm"
-          className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-orange-500 text-white transition-all active:scale-95"
+          className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold bg-orange-500 text-white active:scale-95 transition-transform"
         >
           Use Anyway
         </button>
@@ -223,43 +339,53 @@ function DuplicateWarning({ siteName, onCancel, onConfirm }: DuplicateWarningPro
   );
 }
 
-// ── Main sheet ────────────────────────────────────────────────────────────────
-interface BodyMapSheetProps {
+// ── Legend item ───────────────────────────────────────────────────────────────
+function LegendDot({ style, label }: { style: React.CSSProperties; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div style={{ width: 10, height: 10, borderRadius: "50%", flexShrink: 0, ...style }} />
+      <span className="text-[10px] text-muted-foreground/55 font-medium">{label}</span>
+    </div>
+  );
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function formatRelative(iso: string) {
+  const h = Math.floor((Date.now() - new Date(iso).getTime()) / 3_600_000);
+  if (h < 1) return "just now";
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return d === 1 ? "yesterday" : `${d} days ago`;
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
+export interface BodyMapSheetProps {
   selected: string;
   onSelect: (site: string) => void;
   onClose: () => void;
 }
 
-function formatRelative(iso: string) {
-  const diffH = Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60));
-  if (diffH < 1) return "just now";
-  if (diffH < 24) return `${diffH}h ago`;
-  const diffD = Math.floor(diffH / 24);
-  if (diffD === 1) return "yesterday";
-  return `${diffD} days ago`;
-}
+// Body map container dimensions — keeps SVG and hotspots in the same space
+const MAP_W = 148;
+const MAP_H = Math.round(MAP_W * (480 / 200)); // = 355
 
 export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps) {
   const { injections } = useInjections();
   const [pendingConfirm, setPendingConfirm] = useState<string | null>(null);
 
-  const lastUsed     = injections.length > 0 ? injections[0].site : null;
-  const lastUsedDate = injections.length > 0 ? injections[0].date : null;
+  const lastUsed     = injections[0]?.site ?? null;
+  const lastUsedDate = injections[0]?.date ?? null;
   const suggested    = computeSuggestedSite(injections);
 
   const recentSet = new Set<string>();
-  let count = 0;
+  let rc = 0;
   for (const inj of injections) {
-    if (count >= 5) break;
-    if (inj.site !== lastUsed && !recentSet.has(inj.site)) {
-      recentSet.add(inj.site);
-      count++;
-    }
+    if (rc >= 5) break;
+    if (inj.site !== lastUsed && !recentSet.has(inj.site)) { recentSet.add(inj.site); rc++; }
   }
 
-  const handleHotspotTap = (name: string) => {
+  const handleTap = (name: string) => {
     if (name === lastUsed && injections.length > 0) {
-      // Same site as last injection — require confirmation
       setPendingConfirm(name);
     } else {
       onSelect(name);
@@ -267,12 +393,11 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
     }
   };
 
-  const handleConfirmAnyway = () => {
-    if (pendingConfirm) {
-      onSelect(pendingConfirm);
-      setPendingConfirm(null);
-      setTimeout(onClose, 180);
-    }
+  const handleConfirm = () => {
+    if (!pendingConfirm) return;
+    onSelect(pendingConfirm);
+    setPendingConfirm(null);
+    setTimeout(onClose, 180);
   };
 
   return (
@@ -280,54 +405,64 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/65 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >
       <motion.div
-        initial={{ y: 100, opacity: 0 }}
+        initial={{ y: 120, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 100, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 320, damping: 32 }}
+        exit={{ y: 120, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 32 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[430px] bg-card border border-border/60 rounded-t-3xl flex flex-col"
+        className="w-full max-w-[430px] bg-card rounded-t-[28px] border border-border/50 flex flex-col overflow-y-auto"
         style={{ maxHeight: "92vh" }}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-border/60 rounded-full" />
+        {/* ── Handle ── */}
+        <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
+          <div className="w-9 h-[3px] bg-border/50 rounded-full" />
         </div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3">
+        {/* ── Header ── */}
+        <div className="flex items-center justify-between px-6 pb-3 flex-shrink-0">
           <div>
-            <h2 className="text-[17px] font-bold leading-tight">Select Injection Site</h2>
-            <p className="text-[12px] text-muted-foreground/60 mt-0.5">Tap a location on the body map</p>
+            <h2 className="text-[18px] font-bold tracking-tight">Injection Site</h2>
+            <p className="text-[12px] text-muted-foreground/55 mt-0.5">Tap to select · front view</p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-            <X size={15} strokeWidth={2.5} />
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-muted/80 flex items-center justify-center text-muted-foreground"
+          >
+            <X size={14} strokeWidth={2.5} />
           </button>
         </div>
 
-        {/* Rotation suggestion banner */}
+        {/* ── Suggestion banner ── */}
         {suggested && (
-          <div className="mx-5 mb-2 bg-emerald-500/8 border border-emerald-500/20 rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5">
-            <Sparkles size={14} className="text-emerald-400 flex-shrink-0" strokeWidth={2} />
-            <p className="text-[12px] text-emerald-400/90 font-medium leading-snug">
-              Suggested next site: <span className="font-bold">{suggested}</span>
+          <div className="mx-6 mb-3 flex-shrink-0 flex items-center gap-2.5 rounded-2xl border border-emerald-500/20 bg-emerald-500/7 px-3.5 py-2.5">
+            <Sparkles size={13} className="text-emerald-400 flex-shrink-0" strokeWidth={2} />
+            <p className="text-[12px] font-medium text-emerald-400/85 leading-snug">
+              Suggested: <span className="font-bold text-emerald-400">{suggested}</span>
             </p>
           </div>
         )}
 
-        {/* Orientation labels */}
-        <div className="flex justify-between px-6 pb-1">
-          <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-wider">← Your Right</span>
-          <span className="text-[10px] font-semibold text-muted-foreground/50 uppercase tracking-wider">Your Left →</span>
+        {/* ── Orientation labels ── */}
+        <div className="flex justify-between px-8 mb-1 flex-shrink-0">
+          <span className="text-[9px] font-semibold text-muted-foreground/40 uppercase tracking-widest">← Your Right</span>
+          <span className="text-[9px] font-semibold text-muted-foreground/40 uppercase tracking-widest">Your Left →</span>
         </div>
 
-        {/* Body map */}
-        <div className="flex-1 overflow-hidden px-4 pb-1" style={{ minHeight: 0 }}>
-          <div className="relative mx-auto" style={{ width: "100%", maxWidth: 230, aspectRatio: "200 / 410" }}>
-            <BodyOutlineSVG />
+        {/* ── Body map ── */}
+        <div className="flex justify-center pb-2 flex-shrink-0">
+          <div
+            style={{
+              position: "relative",
+              width: MAP_W,
+              height: MAP_H,
+              flexShrink: 0,
+            }}
+          >
+            <MedicalBodySVG />
             {SITE_POINTS.map((site) => {
               const state = getSiteState(site.name, selected, lastUsed, recentSet);
               return (
@@ -336,52 +471,64 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
                   site={site}
                   state={state}
                   isSuggested={site.name === suggested}
-                  onClick={() => handleHotspotTap(site.name)}
+                  onClick={() => handleTap(site.name)}
                 />
               );
             })}
           </div>
         </div>
 
-        {/* Duplicate warning */}
+        {/* ── Legend ── */}
+        <div className="flex items-center justify-center gap-4 px-6 py-3 border-t border-border/30 flex-shrink-0">
+          <LegendDot
+            style={{ background: "hsl(174 72% 40%)", boxShadow: "0 0 6px hsl(174 72% 40% / 0.5)" }}
+            label="Selected"
+          />
+          <LegendDot
+            style={{ background: "hsl(38 95% 55% / 0.2)", border: "1.5px solid hsl(38 95% 55%)" }}
+            label="Last Used"
+          />
+          <LegendDot
+            style={{ background: "transparent", border: "1.5px solid hsl(220 13% 58%)" }}
+            label="Recent"
+          />
+          <LegendDot
+            style={{ background: "hsl(152 60% 46%)" }}
+            label="Suggested"
+          />
+        </div>
+
+        {/* ── Duplicate warning ── */}
         <AnimatePresence>
           {pendingConfirm && (
             <DuplicateWarning
               siteName={pendingConfirm}
               onCancel={() => setPendingConfirm(null)}
-              onConfirm={handleConfirmAnyway}
+              onConfirm={handleConfirm}
             />
           )}
         </AnimatePresence>
 
-        {/* Legend */}
-        <div className="flex items-center justify-center gap-4 px-5 py-2 border-t border-border/40">
-          <LegendItem color="bg-primary"     label="Selected"  />
-          <LegendItem color="bg-orange-500"  label="Last Used" />
-          <LegendItem color="bg-transparent border-2 border-slate-400" label="Recent" />
-          <LegendItem color="bg-emerald-500" label="Suggested" />
-        </div>
-
-        {/* Last logged site */}
-        {lastUsed && (
-          <div className="px-5 py-3 border-t border-border/40 flex items-center justify-between">
+        {/* ── Last used footer ── */}
+        {lastUsed && !pendingConfirm && (
+          <div className="px-6 py-3 border-t border-border/30 flex items-center justify-between flex-shrink-0">
             <div>
-              <p className="text-[11px] font-semibold text-muted-foreground/50 uppercase tracking-widest">Last Used</p>
-              <p className="text-[14px] font-semibold mt-0.5">{lastUsed}</p>
+              <p className="text-[10px] font-semibold text-muted-foreground/45 uppercase tracking-widest mb-0.5">Last Used</p>
+              <p className="text-[14px] font-semibold">{lastUsed}</p>
             </div>
             {lastUsedDate && (
-              <p className="text-[12px] text-muted-foreground/60">{formatRelative(lastUsedDate)}</p>
+              <p className="text-[12px] text-muted-foreground/50">{formatRelative(lastUsedDate)}</p>
             )}
           </div>
         )}
 
-        {/* Confirm bar */}
+        {/* ── Selection confirm bar ── */}
         {selected && !pendingConfirm && (
-          <div className="px-5 pb-5">
-            <div className="bg-primary/10 border border-primary/25 rounded-2xl px-4 py-3 flex items-center justify-between">
+          <div className="px-6 pb-6 pt-1 flex-shrink-0">
+            <div className="flex items-center justify-between bg-primary/10 border border-primary/20 rounded-2xl px-4 py-3">
               <div>
-                <p className="text-[11px] font-semibold text-primary/70 uppercase tracking-widest">Selected</p>
-                <p className="text-[15px] font-bold text-primary mt-0.5">{selected}</p>
+                <p className="text-[10px] font-semibold text-primary/60 uppercase tracking-widest mb-0.5">Selected</p>
+                <p className="text-[15px] font-bold text-primary leading-tight">{selected}</p>
               </div>
               <motion.button
                 whileTap={{ scale: 0.95 }}
@@ -395,14 +542,5 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
         )}
       </motion.div>
     </motion.div>
-  );
-}
-
-function LegendItem({ color, label }: { color: string; label: string }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className={`w-3 h-3 rounded-full ${color}`} />
-      <span className="text-[11px] text-muted-foreground/60 font-medium">{label}</span>
-    </div>
   );
 }
