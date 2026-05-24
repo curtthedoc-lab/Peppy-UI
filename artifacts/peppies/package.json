@@ -76,6 +76,8 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@zxing/browser": "^0.2.0",
+    "@zxing/library": "^0.22.0",
     "workbox-window": "^7.4.1"
   }
 }
