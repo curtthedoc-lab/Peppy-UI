@@ -16,7 +16,10 @@ export function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-[430px] mx-auto bg-background text-foreground relative overflow-hidden">
-      <div className="flex-1 overflow-y-auto pb-[84px] scrollbar-none relative">
+      <div
+        className="flex-1 overflow-y-auto scrollbar-none relative"
+        style={{ paddingBottom: "calc(72px + env(safe-area-inset-bottom, 12px))" }}
+      >
         <AnimatePresence mode="wait">
           <motion.main
             key={location}
@@ -31,7 +34,13 @@ export function Layout({ children }: { children: ReactNode }) {
         </AnimatePresence>
       </div>
 
-      <nav className="absolute bottom-0 w-full bg-card/90 backdrop-blur-2xl border-t border-border/60 flex items-center justify-around px-1 z-50" style={{ height: 84, paddingBottom: "env(safe-area-inset-bottom, 12px)" }}>
+      <nav
+        className="absolute bottom-0 w-full bg-card/90 backdrop-blur-2xl border-t border-border/60 flex items-center justify-around px-1 z-50"
+        style={{
+          height: "calc(72px + env(safe-area-inset-bottom, 12px))",
+          paddingBottom: "env(safe-area-inset-bottom, 12px)",
+        }}
+      >
         {navItems.map((item) => {
           const isActive = location === item.href;
           const Icon = item.icon;
