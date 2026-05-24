@@ -50,5 +50,13 @@ export function useInjections() {
     });
   }, []);
 
-  return { injections, addInjection, deleteInjection };
+  const updateInjection = useCallback((id: string, patch: Partial<Omit<Injection, "id" | "date">>) => {
+    setInjections((prev) => {
+      const next = prev.map((i) => (i.id === id ? { ...i, ...patch } : i));
+      saveToStorage(next);
+      return next;
+    });
+  }, []);
+
+  return { injections, addInjection, deleteInjection, updateInjection };
 }
