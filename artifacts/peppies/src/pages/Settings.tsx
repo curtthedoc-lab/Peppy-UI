@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { useInjections } from "@/hooks/useInjections";
 import { exportInjectionsAsCsv } from "@/utils/exportCsv";
 import { exportBackupAsJson, parseBackupFile, applyBackup, summarizeBackup, BackupFile } from "@/utils/backup";
+import { AboutSheet } from "@/components/AboutSheet";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -210,6 +211,7 @@ export function Settings() {
   const [pendingBackup, setPendingBackup] = useState<BackupFile | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [restoreDone, setRestoreDone] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { injections } = useInjections();
 
@@ -324,6 +326,7 @@ export function Settings() {
               label="About Peppies"
               sublabel="Version 1.0.0"
               testId="settings-about"
+              onClick={() => setShowAbout(true)}
             />
           </div>
 
@@ -452,6 +455,7 @@ export function Settings() {
             onCancel={() => setPendingBackup(null)}
           />
         )}
+        {showAbout && <AboutSheet onClose={() => setShowAbout(false)} />}
       </AnimatePresence>
     </>
   );
