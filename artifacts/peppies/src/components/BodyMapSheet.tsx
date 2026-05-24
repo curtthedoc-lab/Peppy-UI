@@ -294,8 +294,9 @@ const RING_COLORS: Record<SiteState, RingColors> = {
     glow: "0 0 0 4px hsl(38 95% 55% / 0.18)",
   },
   recent: {
-    ring: "hsl(220 10% 58%)",
-    dot:  "hsl(220 10% 46%)",
+    ring: "hsl(265 75% 68%)",
+    dot:  "hsl(265 70% 58%)",
+    glow: "0 0 0 3px hsl(265 70% 58% / 0.16)",
   },
   default: {
     ring: "hsl(220 10% 40%)",
@@ -632,7 +633,7 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
             ring="hsl(38 95% 55%)" dot="hsl(38 95% 45%)" label="Last Used"
           />
           <LegendItem
-            ring="hsl(220 10% 58%)" dot="hsl(220 10% 46%)" label="Recent"
+            ring="hsl(265 75% 68%)" dot="hsl(265 70% 58%)" label="Recent"
           />
           <div className="flex items-center gap-1.5">
             <div style={{ width: 8, height: 8, borderRadius: "50%", background: "hsl(152 58% 44%)", flexShrink: 0 }} />
