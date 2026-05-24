@@ -1,15 +1,14 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Trash2, FlaskConical } from "lucide-react";
+import { Trash2, FlaskConical, Download, CheckCheck } from "lucide-react";
 import { useInjections, Injection } from "@/hooks/useInjections";
+import { exportInjectionsAsCsv } from "@/utils/exportCsv";
 import { useState } from "react";
 
 function formatDate(iso: string) {
   const d = new Date(iso);
   const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffH = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffH = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60));
   const diffD = Math.floor(diffH / 24);
-
   if (diffH < 1) return "Just now";
   if (diffH < 24) return `${diffH}h ago`;
   if (diffD === 1) return "Yesterday";
@@ -22,12 +21,7 @@ function formatTime(iso: string) {
 }
 
 function peptideInitials(name: string) {
-  return name
-    .split(/[-\s]/)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  return name.split(/[-\s]/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 }
 
 function InjectionRow({ injection, onDelete }: { injection: Injection; onDelete: () => void }) {
@@ -88,6 +82,55 @@ function InjectionRow({ injection, onDelete }: { injection: Injection; onDelete:
   );
 }
 
+function ExportButton({ injections }: { injections: Injection[] }) {
+  const [exported, setExported] = useState(false);
+
+  const handleExport = () => {
+    exportInjectionsAsCsv(injections);
+    setExported(true);
+    setTimeout(() => setExported(false), 2500);
+  };
+
+  return (
+    <motion.button
+      whileTap={{ scale: 0.93 }}
+      onClick={handleExport}
+      data-testid="button-export-history"
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold transition-all duration-200 ${
+        exported
+          ? "bg-primary/15 text-primary"
+          : "bg-muted text-muted-foreground hover:text-foreground"
+      }`}
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        {exported ? (
+          <motion.span
+            key="done"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="flex items-center gap-1.5"
+          >
+            <CheckCheck size={13} strokeWidth={2.2} />
+            Exported
+          </motion.span>
+        ) : (
+          <motion.span
+            key="export"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="flex items-center gap-1.5"
+          >
+            <Download size={13} strokeWidth={2.2} />
+            Export CSV
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
+  );
+}
+
 export function History() {
   const { injections, deleteInjection } = useInjections();
 
@@ -100,9 +143,12 @@ export function History() {
         <div className="flex items-center justify-between">
           <h1 className="text-[28px] font-bold tracking-[-0.03em] leading-none">History</h1>
           {injections.length > 0 && (
-            <span className="text-[12px] font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
-              {injections.length} {injections.length === 1 ? "entry" : "entries"}
-            </span>
+            <div className="flex items-center gap-2">
+              <ExportButton injections={injections} />
+              <span className="text-[12px] font-medium text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
+                {injections.length} {injections.length === 1 ? "entry" : "entries"}
+              </span>
+            </div>
           )}
         </div>
       </header>

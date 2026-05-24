@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Bell, Scale, Moon, Info, ChevronRight, Trash2, AlertTriangle } from "lucide-react";
+import { User, Bell, Scale, Moon, Info, ChevronRight, Trash2, AlertTriangle, Download, CheckCheck } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useInjections } from "@/hooks/useInjections";
+import { exportInjectionsAsCsv } from "@/utils/exportCsv";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -125,12 +127,20 @@ function ResetConfirmSheet({ onConfirm, onCancel }: { onConfirm: () => void; onC
 export function Settings() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [resetDone, setResetDone] = useState(false);
+  const [exported, setExported] = useState(false);
+  const { injections } = useInjections();
 
   const handleReset = () => {
     ALL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
     setShowConfirm(false);
     setResetDone(true);
     setTimeout(() => window.location.reload(), 800);
+  };
+
+  const handleExport = () => {
+    exportInjectionsAsCsv(injections);
+    setExported(true);
+    setTimeout(() => setExported(false), 2500);
   };
 
   return (
@@ -204,6 +214,28 @@ export function Settings() {
 
           <SectionLabel label="Data" />
           <div className="flex flex-col gap-2">
+            <Row
+              icon={Download}
+              label="Export History"
+              sublabel={injections.length > 0 ? `${injections.length} ${injections.length === 1 ? "entry" : "entries"} as CSV` : "No entries to export"}
+              teal={injections.length > 0}
+              testId="settings-export"
+              onClick={injections.length > 0 ? handleExport : undefined}
+              right={
+                exported ? (
+                  <motion.span
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-1 text-primary text-[12px] font-semibold"
+                  >
+                    <CheckCheck size={14} strokeWidth={2.2} />
+                    Saved
+                  </motion.span>
+                ) : (
+                  <ChevronRight size={16} className={injections.length > 0 ? "text-muted-foreground/50" : "text-muted-foreground/25"} strokeWidth={2} />
+                )
+              }
+            />
             <Row
               icon={Trash2}
               label="Reset App Data"
