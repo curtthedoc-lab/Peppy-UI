@@ -3,8 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CheckCircle2, ChevronDown } from "lucide-react";
+import { CheckCircle2, ChevronDown, MapPin } from "lucide-react";
 import { useInjections } from "@/hooks/useInjections";
+import { BodyMapSheet } from "@/components/BodyMapSheet";
 
 const PEPTIDES = [
   "BPC-157",
@@ -21,19 +22,6 @@ const PEPTIDES = [
 ];
 
 const UNITS = ["mcg", "mg", "IU", "units"];
-
-const SITES = [
-  "Left Abdomen",
-  "Right Abdomen",
-  "Left Flank",
-  "Right Flank",
-  "Left Thigh",
-  "Right Thigh",
-  "Left Arm (Bicep)",
-  "Right Arm (Bicep)",
-  "Left Glute",
-  "Right Glute",
-];
 
 const schema = z.object({
   peptide: z.string().min(1, "Select a peptide"),
@@ -72,13 +60,41 @@ function NativeSelect({
       >
         <option value="" disabled hidden>{placeholder}</option>
         {options.map((o) => (
-          <option key={o} value={o} className="bg-card text-foreground">
-            {o}
-          </option>
+          <option key={o} value={o} className="bg-card text-foreground">{o}</option>
         ))}
       </select>
       <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
     </div>
+  );
+}
+
+function SiteButton({
+  value,
+  onClick,
+  error,
+}: {
+  value: string;
+  onClick: () => void;
+  error?: string;
+}) {
+  return (
+    <motion.button
+      type="button"
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      data-testid="button-select-site"
+      className={`w-full bg-card border rounded-2xl px-4 py-3.5 text-[14px] font-medium text-left flex items-center justify-between gap-3 transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 ${
+        error ? "border-destructive" : "border-border/60"
+      }`}
+    >
+      <span className={value ? "text-foreground" : "text-muted-foreground/60"}>
+        {value || "Tap to select site"}
+      </span>
+      <div className="flex items-center gap-1.5 flex-shrink-0 text-primary/70">
+        <MapPin size={14} strokeWidth={2} />
+        <span className="text-[12px] font-semibold">Body Map</span>
+      </div>
+    </motion.button>
   );
 }
 
@@ -116,6 +132,7 @@ function Field({
 export function Log() {
   const { addInjection } = useInjections();
   const [saved, setSaved] = useState(false);
+  const [showBodyMap, setShowBodyMap] = useState(false);
 
   const { register, control, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -136,135 +153,152 @@ export function Log() {
   };
 
   return (
-    <div className="flex flex-col px-5 pt-14 pb-6">
-      <header className="mb-8">
-        <p className="text-[13px] font-medium text-muted-foreground/80 tracking-wide uppercase mb-1">
-          Injections
-        </p>
-        <h1 className="text-[28px] font-bold tracking-[-0.03em] leading-none">
-          Log Injection
-        </h1>
-      </header>
+    <>
+      <div className="flex flex-col px-5 pt-14 pb-6">
+        <header className="mb-8">
+          <p className="text-[13px] font-medium text-muted-foreground/80 tracking-wide uppercase mb-1">
+            Injections
+          </p>
+          <h1 className="text-[28px] font-bold tracking-[-0.03em] leading-none">
+            Log Injection
+          </h1>
+        </header>
 
-      <AnimatePresence mode="wait">
-        {saved ? (
-          <motion.div
-            key="success"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 280, damping: 24 }}
-            className="flex flex-col items-center justify-center py-20 gap-5 text-center"
-          >
-            <div className="w-20 h-20 rounded-full bg-primary/12 border border-primary/25 flex items-center justify-center text-primary">
-              <CheckCircle2 size={38} strokeWidth={1.5} />
-            </div>
-            <div>
-              <h2 className="text-[18px] font-semibold mb-1">Injection Logged</h2>
-              <p className="text-[13px] text-muted-foreground">Saved to your history.</p>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.form
-            key="form"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col gap-5"
-            noValidate
-          >
-            <Field label="Peptide" error={errors.peptide?.message}>
-              <Controller
-                name="peptide"
-                control={control}
-                render={({ field }) => (
-                  <NativeSelect
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={PEPTIDES}
-                    placeholder="Select peptide"
-                    testId="select-peptide"
-                    error={errors.peptide?.message}
-                  />
-                )}
-              />
-            </Field>
-
-            <div className="flex gap-3">
-              <div className="flex-1">
-                <Field label="Dose" error={errors.dose?.message}>
-                  <input
-                    {...register("dose")}
-                    type="number"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    data-testid="input-dose"
-                    className={`w-full bg-card border rounded-2xl px-4 py-3.5 text-[14px] font-medium outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                      errors.dose ? "border-destructive" : "border-border/60"
-                    }`}
-                  />
-                </Field>
-              </div>
-              <div className="w-28">
-                <Field label="Units" error={errors.units?.message}>
-                  <Controller
-                    name="units"
-                    control={control}
-                    render={({ field }) => (
-                      <NativeSelect
-                        value={field.value}
-                        onChange={field.onChange}
-                        options={UNITS}
-                        placeholder="Unit"
-                        testId="select-units"
-                        error={errors.units?.message}
-                      />
-                    )}
-                  />
-                </Field>
-              </div>
-            </div>
-
-            <Field label="Injection Site" error={errors.site?.message}>
-              <Controller
-                name="site"
-                control={control}
-                render={({ field }) => (
-                  <NativeSelect
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={SITES}
-                    placeholder="Select site"
-                    testId="select-site"
-                    error={errors.site?.message}
-                  />
-                )}
-              />
-            </Field>
-
-            <Field label="Notes (optional)">
-              <textarea
-                {...register("notes")}
-                placeholder="Any additional notes..."
-                rows={3}
-                data-testid="input-notes"
-                className="w-full bg-card border border-border/60 rounded-2xl px-4 py-3.5 text-[14px] font-medium outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/50 resize-none leading-relaxed"
-              />
-            </Field>
-
-            <motion.button
-              type="submit"
-              disabled={isSubmitting}
-              whileTap={{ scale: 0.97 }}
-              data-testid="button-save-injection"
-              className="w-full mt-2 bg-primary text-primary-foreground font-semibold text-[15px] py-4 rounded-2xl shadow-lg shadow-primary/25 active:shadow-primary/10 transition-shadow disabled:opacity-60 tracking-wide"
+        <AnimatePresence mode="wait">
+          {saved ? (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 280, damping: 24 }}
+              className="flex flex-col items-center justify-center py-20 gap-5 text-center"
             >
-              Save Injection
-            </motion.button>
-          </motion.form>
+              <div className="w-20 h-20 rounded-full bg-primary/12 border border-primary/25 flex items-center justify-center text-primary">
+                <CheckCircle2 size={38} strokeWidth={1.5} />
+              </div>
+              <div>
+                <h2 className="text-[18px] font-semibold mb-1">Injection Logged</h2>
+                <p className="text-[13px] text-muted-foreground">Saved to your history.</p>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.form
+              key="form"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex flex-col gap-5"
+              noValidate
+            >
+              <Field label="Peptide" error={errors.peptide?.message}>
+                <Controller
+                  name="peptide"
+                  control={control}
+                  render={({ field }) => (
+                    <NativeSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      options={PEPTIDES}
+                      placeholder="Select peptide"
+                      testId="select-peptide"
+                      error={errors.peptide?.message}
+                    />
+                  )}
+                />
+              </Field>
+
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <Field label="Dose" error={errors.dose?.message}>
+                    <input
+                      {...register("dose")}
+                      type="number"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      data-testid="input-dose"
+                      className={`w-full bg-card border rounded-2xl px-4 py-3.5 text-[14px] font-medium outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                        errors.dose ? "border-destructive" : "border-border/60"
+                      }`}
+                    />
+                  </Field>
+                </div>
+                <div className="w-28">
+                  <Field label="Units" error={errors.units?.message}>
+                    <Controller
+                      name="units"
+                      control={control}
+                      render={({ field }) => (
+                        <NativeSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                          options={UNITS}
+                          placeholder="Unit"
+                          testId="select-units"
+                          error={errors.units?.message}
+                        />
+                      )}
+                    />
+                  </Field>
+                </div>
+              </div>
+
+              {/* Injection Site — body map trigger */}
+              <Field label="Injection Site" error={errors.site?.message}>
+                <Controller
+                  name="site"
+                  control={control}
+                  render={({ field }) => (
+                    <SiteButton
+                      value={field.value}
+                      onClick={() => setShowBodyMap(true)}
+                      error={errors.site?.message}
+                    />
+                  )}
+                />
+              </Field>
+
+              <Field label="Notes (optional)">
+                <textarea
+                  {...register("notes")}
+                  placeholder="Any additional notes..."
+                  rows={3}
+                  data-testid="input-notes"
+                  className="w-full bg-card border border-border/60 rounded-2xl px-4 py-3.5 text-[14px] font-medium outline-none focus:ring-2 focus:ring-primary/40 transition-all placeholder:text-muted-foreground/50 resize-none leading-relaxed"
+                />
+              </Field>
+
+              <motion.button
+                type="submit"
+                disabled={isSubmitting}
+                whileTap={{ scale: 0.97 }}
+                data-testid="button-save-injection"
+                className="w-full mt-2 bg-primary text-primary-foreground font-semibold text-[15px] py-4 rounded-2xl shadow-lg shadow-primary/25 active:shadow-primary/10 transition-shadow disabled:opacity-60 tracking-wide"
+              >
+                Save Injection
+              </motion.button>
+            </motion.form>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Body map sheet — rendered outside the form so it overlays correctly */}
+      <AnimatePresence>
+        {showBodyMap && (
+          <Controller
+            name="site"
+            control={control}
+            render={({ field }) => (
+              <BodyMapSheet
+                selected={field.value}
+                onSelect={(site) => { field.onChange(site); }}
+                onClose={() => setShowBodyMap(false)}
+              />
+            )}
+          />
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }
