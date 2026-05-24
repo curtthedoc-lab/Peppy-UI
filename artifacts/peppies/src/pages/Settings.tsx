@@ -33,6 +33,7 @@ const ALL_STORAGE_KEYS = [
   "peppies_nutrition_entries",
   "peppies_nutrition_goals",
   "peppies_steps",
+  "peppies_sleep",
 ];
 
 function SectionLabel({ label }: { label: string }) {

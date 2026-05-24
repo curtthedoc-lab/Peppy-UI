@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PenLine, Scale, Droplets, Flame, CalendarDays, FlaskConical, Activity, Plus, Minus, TrendingDown, TrendingUp, Footprints } from "lucide-react";
+import { PenLine, Scale, Droplets, Flame, CalendarDays, FlaskConical, Activity, Plus, Minus, TrendingDown, TrendingUp, Footprints, Moon } from "lucide-react";
 import { Link } from "wouter";
 import { useInjections, Injection } from "@/hooks/useInjections";
 import { useCycles, daysSince } from "@/hooks/useCycles";
@@ -8,6 +8,8 @@ import { useWeight } from "@/hooks/useWeight";
 import { useHydration } from "@/hooks/useHydration";
 import { CycleSheet } from "@/components/CycleSheet";
 import { WeightSheet } from "@/components/WeightSheet";
+import { SleepSheet } from "@/components/SleepSheet";
+import { useSleep } from "@/hooks/useSleep";
 import { peptideInitials, shortPeptideName } from "@/utils/peptideName";
 import { usePreferences } from "@/hooks/usePreferences";
 
@@ -226,6 +228,69 @@ function StepsCard() {
   );
 }
 
+function SleepCard({ onOpen }: { onOpen: () => void }) {
+  const { latest, weekAverage } = useSleep();
+
+  const hoursLabel = (h: number) => {
+    const whole = Math.floor(h);
+    const mins = Math.round((h - whole) * 60);
+    return mins === 0 ? `${whole}h` : `${whole}h ${mins}m`;
+  };
+
+  return (
+    <motion.div
+      variants={cardVariants}
+      className="bg-card rounded-3xl p-5 border border-border/60"
+      data-testid="card-sleep"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <CardIcon icon={Moon} />
+          <div>
+            <h2 className="text-[15px] font-semibold leading-tight">Sleep</h2>
+            <p className="text-[12px] text-muted-foreground/70 mt-0.5">
+              {weekAverage != null
+                ? `7-day avg ${hoursLabel(weekAverage)}`
+                : "Track how well you slept"}
+            </p>
+          </div>
+        </div>
+        <button
+          onClick={onOpen}
+          data-testid="button-log-sleep-home"
+          style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+          className="text-[13px] font-semibold text-primary tracking-wide px-3.5 py-2 rounded-xl bg-primary/15 border border-primary/30 shadow-sm shadow-primary/10 active:scale-95 active:bg-primary/25 transition-all whitespace-nowrap"
+        >
+          {latest ? "Log" : "Track"}
+        </button>
+      </div>
+      <div className="flex items-end justify-between">
+        <div>
+          {latest ? (
+            <>
+              <span className="text-[40px] font-bold tracking-[-0.04em] leading-none text-primary tabular-nums">
+                {hoursLabel(latest.hours)}
+              </span>
+              <span className="text-[13px] font-medium text-muted-foreground ml-2">
+                last night
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-[40px] font-bold tracking-[-0.04em] leading-none text-foreground/30">
+                --
+              </span>
+              <span className="text-[13px] font-medium text-muted-foreground/40 ml-2">
+                no log yet
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function WeightCard({ onOpen }: { onOpen: () => void }) {
   const { latest, previous, trend, entries } = useWeight();
   const { prefs } = usePreferences();
@@ -367,6 +432,7 @@ export function Home() {
   const recent = injections.slice(0, 3);
   const [showCycleSheet, setShowCycleSheet] = useState(false);
   const [showWeightSheet, setShowWeightSheet] = useState(false);
+  const [showSleepSheet, setShowSleepSheet] = useState(false);
 
   const streak = computeStreak(injections);
   const weekCount = computeWeekCount(injections);
@@ -416,6 +482,7 @@ export function Home() {
           </motion.div>
 
           <StepsCard />
+          <SleepCard onOpen={() => setShowSleepSheet(true)} />
           <WeightCard onOpen={() => setShowWeightSheet(true)} />
           <HydrationCard />
         </motion.div>
@@ -424,6 +491,7 @@ export function Home() {
       <AnimatePresence>
         {showCycleSheet && <CycleSheet onClose={() => setShowCycleSheet(false)} />}
         {showWeightSheet && <WeightSheet onClose={() => setShowWeightSheet(false)} />}
+        {showSleepSheet && <SleepSheet onClose={() => setShowSleepSheet(false)} />}
       </AnimatePresence>
     </>
   );

@@ -16,6 +16,7 @@ import {
   Scale,
   Footprints,
   Smartphone,
+  Moon,
 } from "lucide-react";
 
 type Step = {
@@ -86,22 +87,28 @@ const STEPS: Step[] = [
       "Step counting only works while the app is open and on screen. If your screen locks or you switch to another app, counting pauses until you come back — this is on purpose, not a bug. iPhone doesn't let web apps read motion sensors in the background. For best results, keep Peppies open during your walk (you can dim the screen). Add Peppies to your Home Screen for the most reliable tracking.",
   },
   {
+    icon: Moon,
+    title: "10. Log your sleep",
+    body:
+      "Tap the Sleep card on Home to log how many hours you slept and rate the quality from Poor to Great. Use the quick toggle for Last night or Night before. Tap '+ Add bedtime, wake time, notes' to enter a bedtime and wake time and Peppies will calculate the hours for you. Only one entry per night — logging the same night again replaces the previous one.",
+  },
+  {
     icon: Clock,
-    title: "10. Review your history",
+    title: "11. Review your history",
     body:
       "Tap History to see every injection and calculation, grouped by day. Filter by peptide to spot patterns over time. Tap any entry for full detail.",
   },
   {
     icon: Bell,
-    title: "11. Turn on cycle reminders (optional)",
+    title: "12. Turn on cycle reminders (optional)",
     body:
       "In Settings, enable Cycle Reminders to get a browser notification when an active cycle ends. Works best when Peppies is installed to your Home Screen.",
   },
   {
     icon: Download,
-    title: "12. Back up your data",
+    title: "13. Back up your data",
     body:
-      "All data stays on this device only — there's no cloud. Use Settings → Export Data regularly and save the file to iCloud Drive or email it to yourself. To restore on a new phone, use Import Data. Backups include injections, cycles, weight, hydration, nutrition, steps, profile, and preferences.",
+      "All data stays on this device only — there's no cloud. Use Settings → Export Data regularly and save the file to iCloud Drive or email it to yourself. To restore on a new phone, use Import Data. Backups include injections, cycles, weight, hydration, nutrition, steps, sleep, profile, and preferences.",
   },
 ];
 
