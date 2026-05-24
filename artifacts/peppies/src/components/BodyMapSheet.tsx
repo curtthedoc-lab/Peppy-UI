@@ -603,7 +603,7 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
             style={{
               position: "relative",
               height: "100%",
-              maxHeight: 500,
+              maxHeight: "min(500px, 56vh)",
               aspectRatio: "200 / 480",
               flexShrink: 0,
             }}
