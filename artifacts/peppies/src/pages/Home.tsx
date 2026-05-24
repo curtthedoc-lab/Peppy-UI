@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PenLine, Scale, Droplets, Flame, CalendarDays, FlaskConical, Activity, Plus, Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { PenLine, Scale, Droplets, Flame, CalendarDays, FlaskConical, Activity, Plus, Minus, TrendingDown, TrendingUp, Footprints } from "lucide-react";
 import { Link } from "wouter";
 import { useInjections, Injection } from "@/hooks/useInjections";
 import { useCycles, daysSince } from "@/hooks/useCycles";
@@ -170,6 +170,58 @@ function CycleCard({ onOpen }: { onOpen: () => void }) {
       ) : (
         <p className="text-[13px] text-muted-foreground/50 py-0.5">Track a peptide protocol — name it, set a duration, and monitor your progress day by day.</p>
       )}
+    </motion.div>
+  );
+}
+
+function StepsCard() {
+  const raw = typeof window !== "undefined" ? localStorage.getItem("peppies_steps") : null;
+  let todaySteps = 0;
+  let todayDistanceM = 0;
+  try {
+    if (raw) {
+      const map = JSON.parse(raw) as Record<string, { steps?: number; distanceM?: number }>;
+      const key = new Date().toISOString().slice(0, 10);
+      todaySteps = map[key]?.steps ?? 0;
+      todayDistanceM = map[key]?.distanceM ?? 0;
+    }
+  } catch {
+    // ignore
+  }
+  const distLabel =
+    todayDistanceM >= 1000
+      ? `${(todayDistanceM / 1000).toFixed(2)} km`
+      : `${Math.round(todayDistanceM)} m`;
+
+  return (
+    <motion.div variants={cardVariants} className="bg-card rounded-3xl p-5 border border-border/60" data-testid="card-steps">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
+          <CardIcon icon={Footprints} />
+          <div>
+            <h2 className="text-[15px] font-semibold leading-tight">Steps</h2>
+            <p className="text-[12px] text-muted-foreground/70 mt-0.5">
+              {todaySteps > 0 ? `${distLabel} today` : "Walk and track activity"}
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/steps"
+          className="text-[13px] font-semibold text-primary tracking-wide px-3.5 py-2 rounded-xl bg-primary/15 border border-primary/30 shadow-sm shadow-primary/10 active:scale-95 active:bg-primary/25 transition-all inline-flex items-center"
+          style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+          data-testid="button-open-steps"
+        >
+          {todaySteps > 0 ? "Walk" : "Start"}
+        </Link>
+      </div>
+      <div className="flex items-end justify-between">
+        <div>
+          <span className="text-[40px] font-bold tracking-[-0.04em] leading-none text-primary tabular-nums">
+            {todaySteps.toLocaleString()}
+          </span>
+          <span className="text-[13px] font-medium text-muted-foreground ml-2">steps</span>
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -363,6 +415,7 @@ export function Home() {
             )}
           </motion.div>
 
+          <StepsCard />
           <WeightCard onOpen={() => setShowWeightSheet(true)} />
           <HydrationCard />
         </motion.div>
