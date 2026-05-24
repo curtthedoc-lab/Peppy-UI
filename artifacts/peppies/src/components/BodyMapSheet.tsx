@@ -53,19 +53,39 @@ const ALL_SITE_NAMES = SITE_POINTS.map((s) => s.name);
 
 // ── Rotation suggestion ───────────────────────────────────────────────────────
 function computeSuggestedSite(injections: Injection[]): string | null {
-  if (injections.length === 0) return ALL_SITE_NAMES[0];
+  // Cycle/rotate so the suggestion changes after every log instead of pinning to one site.
+  const rotation = injections.length;
+
+  if (injections.length === 0) {
+    return ALL_SITE_NAMES[rotation % ALL_SITE_NAMES.length];
+  }
+
   const lastUsedIdx: Record<string, number> = {};
   for (let i = 0; i < injections.length; i++) {
     const s = injections[i].site;
     if (!(s in lastUsedIdx)) lastUsedIdx[s] = i;
   }
-  const never = ALL_SITE_NAMES.filter((s) => !(s in lastUsedIdx));
-  if (never.length > 0) return never[0];
+
   const lastSite = injections[0].site;
-  return (
-    ALL_SITE_NAMES.filter((s) => s !== lastSite)
-      .sort((a, b) => lastUsedIdx[b] - lastUsedIdx[a])[0] ?? null
-  );
+  const recentSites = new Set(injections.slice(0, 3).map((i) => i.site));
+
+  // Prefer sites never used — rotate through them so each log shifts the suggestion.
+  const never = ALL_SITE_NAMES.filter((s) => !(s in lastUsedIdx));
+  if (never.length > 0) {
+    return never[rotation % never.length];
+  }
+
+  // All sites used — pick from the stalest half, excluding the last few used,
+  // and rotate within that pool so the suggestion changes each time.
+  const stale = ALL_SITE_NAMES
+    .filter((s) => s !== lastSite && !recentSites.has(s))
+    .sort((a, b) => lastUsedIdx[b] - lastUsedIdx[a]);
+
+  const pool = stale.length > 0
+    ? stale.slice(0, Math.max(4, Math.ceil(stale.length / 2)))
+    : ALL_SITE_NAMES.filter((s) => s !== lastSite);
+
+  return pool[rotation % pool.length] ?? null;
 }
 
 // ── Anatomy SVG — professional medical illustration adapted for dark mode ─────
