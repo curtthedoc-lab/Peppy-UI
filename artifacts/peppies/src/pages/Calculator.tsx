@@ -182,7 +182,7 @@ function ReferenceCard({ peptide, onUse }: { peptide: PeptideRef; onUse: () => v
             transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="overflow-hidden"
           >
-            <div className="pb-4 px-1 flex flex-col gap-3">
+            <div className="pb-4 px-1 flex flex-col gap-2.5">
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-muted/40 rounded-xl p-3">
                   <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-wider uppercase mb-1">Vial Size</p>
@@ -192,13 +192,24 @@ function ReferenceCard({ peptide, onUse }: { peptide: PeptideRef; onUse: () => v
                   <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-wider uppercase mb-1">BAC Water</p>
                   <p className="text-[13px] font-semibold">{peptide.bacWaterMl} mL</p>
                 </div>
+                <div className="bg-muted/40 rounded-xl p-3">
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-wider uppercase mb-1">Concentration</p>
+                  <p className="text-[13px] font-semibold">{peptide.concentration}</p>
+                </div>
+                <div className="bg-muted/40 rounded-xl p-3">
+                  <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-wider uppercase mb-1">Per Unit</p>
+                  <p className="text-[13px] font-semibold">{peptide.perUnit}</p>
+                </div>
               </div>
               <div className="bg-muted/40 rounded-xl p-3">
                 <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-wider uppercase mb-1">Dose Range</p>
-                <p className="text-[13px] font-semibold">{peptide.doseRange}</p>
+                <p className="text-[13px] font-semibold leading-snug">{peptide.doseRange}</p>
               </div>
               <div className="bg-muted/20 rounded-xl p-3">
                 <p className="text-[12px] text-muted-foreground/70 leading-relaxed">{peptide.notes}</p>
+              </div>
+              <div className="flex items-center justify-between px-1">
+                <p className="text-[10px] text-muted-foreground/40">Source: {peptide.source}</p>
               </div>
               <motion.button
                 whileTap={{ scale: 0.97 }}
