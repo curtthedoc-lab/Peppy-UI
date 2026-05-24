@@ -6,6 +6,8 @@ const BACKUP_KEYS = [
   "peppies_hydration",
   "peppies_preferences",
   "peppies_profile",
+  "peppies_nutrition_entries",
+  "peppies_nutrition_goals",
 ] as const;
 
 type BackupKey = (typeof BACKUP_KEYS)[number];
@@ -18,9 +20,11 @@ const KEY_SHAPES: Record<BackupKey, "array" | "object"> = {
   peppies_hydration: "object",
   peppies_preferences: "object",
   peppies_profile: "object",
+  peppies_nutrition_entries: "array",
+  peppies_nutrition_goals: "object",
 };
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 const APP = "peppies";
 
 export interface BackupFile {
@@ -133,6 +137,7 @@ export function summarizeBackup(backup: BackupFile): {
   injections: number;
   calculations: number;
   cycles: number;
+  foods: number;
   exportedAt: string;
 } {
   const arr = (v: unknown) => (Array.isArray(v) ? v.length : 0);
@@ -140,6 +145,7 @@ export function summarizeBackup(backup: BackupFile): {
     injections: arr(backup.data["peppies_injections"]),
     calculations: arr(backup.data["peppies_calculations"]),
     cycles: arr(backup.data["peppies_cycles"]),
+    foods: arr(backup.data["peppies_nutrition_entries"]),
     exportedAt: backup.exportedAt,
   };
 }

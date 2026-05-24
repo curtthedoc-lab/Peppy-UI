@@ -30,6 +30,8 @@ const ALL_STORAGE_KEYS = [
   "peppies_preferences",
   "peppies_notifications",
   "peppies_profile",
+  "peppies_nutrition_entries",
+  "peppies_nutrition_goals",
 ];
 
 function SectionLabel({ label }: { label: string }) {
@@ -123,7 +125,7 @@ function RestoreConfirmSheet({
             <h2 className="text-[17px] font-bold mb-1.5">Restore this backup?</h2>
             <p className="text-[13px] text-muted-foreground leading-relaxed">
               This will <span className="font-semibold text-foreground">replace</span> all current
-              injections, calculations, and cycles on this device.
+              injections, calculations, cycles, and food log on this device.
             </p>
           </div>
         </div>
@@ -133,6 +135,7 @@ function RestoreConfirmSheet({
           <div className="flex justify-between"><span className="text-muted-foreground">Injections</span><span className="font-medium">{summary.injections}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Calculations</span><span className="font-medium">{summary.calculations}</span></div>
           <div className="flex justify-between"><span className="text-muted-foreground">Cycles</span><span className="font-medium">{summary.cycles}</span></div>
+          <div className="flex justify-between"><span className="text-muted-foreground">Food entries</span><span className="font-medium">{summary.foods}</span></div>
         </div>
 
         <div className="flex flex-col gap-2.5">
@@ -408,7 +411,7 @@ export function Settings() {
             <Row
               icon={FileJson}
               label="Backup (JSON)"
-              sublabel="Full backup — injections, calculations, cycles"
+              sublabel="Full backup — injections, calculations, cycles, food log"
               teal
               testId="settings-backup"
               onClick={handleBackup}
