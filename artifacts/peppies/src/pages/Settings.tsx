@@ -9,11 +9,11 @@ import { exportBackupAsJson, parseBackupFile, applyBackup, summarizeBackup, Back
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.04 } },
-};
+} as const;
 const rowVariants = {
   hidden: { opacity: 0, x: -6 },
   show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 28 } },
-};
+} as const;
 
 const ALL_STORAGE_KEYS = [
   "peppies_injections",

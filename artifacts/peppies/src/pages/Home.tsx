@@ -13,11 +13,11 @@ import { peptideInitials, shortPeptideName } from "@/utils/peptideName";
 const containerVariants = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
-};
+} as const;
 const cardVariants = {
   hidden: { opacity: 0, y: 24 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 280, damping: 26 } },
-};
+} as const;
 
 function toDateKey(iso: string) { return iso.slice(0, 10); }
 
