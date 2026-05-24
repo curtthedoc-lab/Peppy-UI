@@ -24,6 +24,8 @@ export interface NutritionGoals {
 
 const ENTRIES_KEY = "peppies_nutrition_entries";
 const GOALS_KEY = "peppies_nutrition_goals";
+const ENTRIES_EVENT = "peppies_nutrition_entries_changed";
+const GOALS_EVENT = "peppies_nutrition_goals_changed";
 
 const DEFAULT_GOALS: NutritionGoals = {
   calories: 2300,
@@ -55,10 +57,12 @@ function loadGoals(): NutritionGoals {
 
 function saveEntries(entries: FoodEntry[]) {
   localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
+  window.dispatchEvent(new CustomEvent(ENTRIES_EVENT));
 }
 
 function saveGoals(goals: NutritionGoals) {
   localStorage.setItem(GOALS_KEY, JSON.stringify(goals));
+  window.dispatchEvent(new CustomEvent(GOALS_EVENT));
 }
 
 export function useNutrition() {
@@ -66,12 +70,20 @@ export function useNutrition() {
   const [goals, setGoalsState] = useState<NutritionGoals>(loadGoals);
 
   useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key === ENTRIES_KEY) setEntries(loadEntries());
-      if (e.key === GOALS_KEY) setGoalsState(loadGoals());
+    const reloadEntries = () => setEntries(loadEntries());
+    const reloadGoals = () => setGoalsState(loadGoals());
+    const storageHandler = (e: StorageEvent) => {
+      if (e.key === ENTRIES_KEY) reloadEntries();
+      if (e.key === GOALS_KEY) reloadGoals();
     };
-    window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+    window.addEventListener(ENTRIES_EVENT, reloadEntries);
+    window.addEventListener(GOALS_EVENT, reloadGoals);
+    window.addEventListener("storage", storageHandler);
+    return () => {
+      window.removeEventListener(ENTRIES_EVENT, reloadEntries);
+      window.removeEventListener(GOALS_EVENT, reloadGoals);
+      window.removeEventListener("storage", storageHandler);
+    };
   }, []);
 
   const addEntry = useCallback((data: Omit<FoodEntry, "id" | "date">) => {

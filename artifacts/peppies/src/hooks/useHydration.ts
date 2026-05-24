@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 interface HydrationState {
   date: string;
@@ -7,6 +7,7 @@ interface HydrationState {
 }
 
 const STORAGE_KEY = "peppies_hydration";
+const EVENT = "peppies_hydration_changed";
 const TODAY = () => new Date().toISOString().slice(0, 10);
 
 function load(): HydrationState {
@@ -24,10 +25,21 @@ function load(): HydrationState {
 
 function save(state: HydrationState) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  window.dispatchEvent(new CustomEvent(EVENT));
 }
 
 export function useHydration() {
   const [state, setState] = useState<HydrationState>(load);
+
+  useEffect(() => {
+    const onChange = () => setState(load());
+    window.addEventListener(EVENT, onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      window.removeEventListener(EVENT, onChange);
+      window.removeEventListener("storage", onChange);
+    };
+  }, []);
 
   const addGlass = useCallback(() => {
     setState((prev) => {

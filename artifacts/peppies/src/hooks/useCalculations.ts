@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { uuid } from "@/utils/uuid";
 
 export interface Calculation {
@@ -13,6 +13,7 @@ export interface Calculation {
 }
 
 const STORAGE_KEY = "peppies_calculations";
+const EVENT = "peppies_calculations_changed";
 
 function load(): Calculation[] {
   try {
@@ -25,10 +26,21 @@ function load(): Calculation[] {
 
 function persist(items: Calculation[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  window.dispatchEvent(new CustomEvent(EVENT));
 }
 
 export function useCalculations() {
   const [calculations, setCalculations] = useState<Calculation[]>(load);
+
+  useEffect(() => {
+    const onChange = () => setCalculations(load());
+    window.addEventListener(EVENT, onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      window.removeEventListener(EVENT, onChange);
+      window.removeEventListener("storage", onChange);
+    };
+  }, []);
 
   const addCalculation = useCallback((data: Omit<Calculation, "id" | "date">) => {
     const entry: Calculation = {

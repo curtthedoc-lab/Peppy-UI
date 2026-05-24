@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { uuid } from "@/utils/uuid";
 
 export interface Injection {
@@ -12,6 +12,7 @@ export interface Injection {
 }
 
 const STORAGE_KEY = "peppies_injections";
+const EVENT = "peppies_injections_changed";
 
 function loadInjections(): Injection[] {
   try {
@@ -24,10 +25,21 @@ function loadInjections(): Injection[] {
 
 function saveToStorage(injections: Injection[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(injections));
+  window.dispatchEvent(new CustomEvent(EVENT));
 }
 
 export function useInjections() {
   const [injections, setInjections] = useState<Injection[]>(loadInjections);
+
+  useEffect(() => {
+    const onChange = () => setInjections(loadInjections());
+    window.addEventListener(EVENT, onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      window.removeEventListener(EVENT, onChange);
+      window.removeEventListener("storage", onChange);
+    };
+  }, []);
 
   const addInjection = useCallback((data: Omit<Injection, "id" | "date">) => {
     const entry: Injection = {

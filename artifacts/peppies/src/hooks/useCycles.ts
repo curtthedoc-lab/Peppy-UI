@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { uuid } from "@/utils/uuid";
 
 export interface Cycle {
@@ -30,6 +30,16 @@ function save(cycles: Cycle[]) {
 
 export function useCycles() {
   const [cycles, setCycles] = useState<Cycle[]>(load);
+
+  useEffect(() => {
+    const onChange = () => setCycles(load());
+    window.addEventListener(CYCLES_CHANGED_EVENT, onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      window.removeEventListener(CYCLES_CHANGED_EVENT, onChange);
+      window.removeEventListener("storage", onChange);
+    };
+  }, []);
 
   const activeCycle = cycles.find((c) => !c.endedAt) ?? null;
   const pastCycles = cycles.filter((c) => !!c.endedAt).reverse();

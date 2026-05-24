@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { uuid } from "@/utils/uuid";
 
 export interface WeightEntry {
@@ -9,6 +9,7 @@ export interface WeightEntry {
 }
 
 const STORAGE_KEY = "peppies_weight";
+const EVENT = "peppies_weight_changed";
 
 function load(): WeightEntry[] {
   try {
@@ -21,10 +22,21 @@ function load(): WeightEntry[] {
 
 function save(entries: WeightEntry[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  window.dispatchEvent(new CustomEvent(EVENT));
 }
 
 export function useWeight() {
   const [entries, setEntries] = useState<WeightEntry[]>(load);
+
+  useEffect(() => {
+    const onChange = () => setEntries(load());
+    window.addEventListener(EVENT, onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      window.removeEventListener(EVENT, onChange);
+      window.removeEventListener("storage", onChange);
+    };
+  }, []);
 
   const latest = entries[0] ?? null;
   const previous = entries[1] ?? null;

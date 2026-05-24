@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { uuid } from "@/utils/uuid";
 
 export interface SleepEntry {
@@ -13,6 +13,7 @@ export interface SleepEntry {
 }
 
 const STORAGE_KEY = "peppies_sleep";
+const EVENT = "peppies_sleep_changed";
 
 function load(): SleepEntry[] {
   try {
@@ -27,10 +28,21 @@ function load(): SleepEntry[] {
 
 function save(entries: SleepEntry[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  window.dispatchEvent(new CustomEvent(EVENT));
 }
 
 export function useSleep() {
   const [entries, setEntries] = useState<SleepEntry[]>(load);
+
+  useEffect(() => {
+    const onChange = () => setEntries(load());
+    window.addEventListener(EVENT, onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      window.removeEventListener(EVENT, onChange);
+      window.removeEventListener("storage", onChange);
+    };
+  }, []);
 
   // Most recent first (matches Weight pattern)
   const latest = entries[0] ?? null;
