@@ -10,6 +10,7 @@ import { CycleSheet } from "@/components/CycleSheet";
 import { WeightSheet } from "@/components/WeightSheet";
 import { SleepSheet } from "@/components/SleepSheet";
 import { useSleep } from "@/hooks/useSleep";
+import { ShopPeptidesButton } from "@/components/ShopPeptidesButton";
 import { peptideInitials, shortPeptideName } from "@/utils/peptideName";
 import { usePreferences } from "@/hooks/usePreferences";
 
@@ -485,6 +486,10 @@ export function Home() {
           <SleepCard onOpen={() => setShowSleepSheet(true)} />
           <WeightCard onOpen={() => setShowWeightSheet(true)} />
           <HydrationCard />
+
+          <motion.div variants={cardVariants} className="mt-1">
+            <ShopPeptidesButton />
+          </motion.div>
         </motion.div>
       </div>
 

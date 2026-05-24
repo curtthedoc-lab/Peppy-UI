@@ -17,6 +17,7 @@ import {
   Footprints,
   Smartphone,
   Moon,
+  ShoppingBag,
 } from "lucide-react";
 
 type Step = {
@@ -105,8 +106,14 @@ const STEPS: Step[] = [
       "In Settings, enable Cycle Reminders to get a browser notification when an active cycle ends. Works best when Peppies is installed to your Home Screen.",
   },
   {
+    icon: ShoppingBag,
+    title: "13. Save your vendor referral link",
+    body:
+      "Settings → Shop & Resources → Affiliate / Referral. Save the name, code, and link of the peptide vendor that referred you. Once saved, a Shop Peptides button appears on the home screen — tapping it opens the link in your browser. You can update or remove it any time, and you'll also be prompted during first setup.",
+  },
+  {
     icon: Download,
-    title: "13. Back up your data",
+    title: "14. Back up your data",
     body:
       "All data stays on this device only — there's no cloud. Use Settings → Export Data regularly and save the file to iCloud Drive or email it to yourself. To restore on a new phone, use Import Data. Backups include injections, cycles, weight, hydration, nutrition, steps, sleep, profile, and preferences.",
   },

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Bell, Scale, Info, ChevronRight, Trash2, AlertTriangle, Download, CheckCheck, Upload, FileJson, BookOpen } from "lucide-react";
+import { User, Bell, Scale, Info, ChevronRight, Trash2, AlertTriangle, Download, CheckCheck, Upload, FileJson, BookOpen, ShoppingBag } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useInjections } from "@/hooks/useInjections";
 import { exportInjectionsAsCsv } from "@/utils/exportCsv";
@@ -8,6 +8,8 @@ import { exportBackupAsJson, parseBackupFile, applyBackup, summarizeBackup, Back
 import { AboutSheet } from "@/components/AboutSheet";
 import { HowToSheet } from "@/components/HowToSheet";
 import { ProfileSheet } from "@/components/ProfileSheet";
+import { AffiliateSheet } from "@/components/AffiliateSheet";
+import { useAffiliate } from "@/hooks/useAffiliate";
 import { usePreferences } from "@/hooks/usePreferences";
 import { requestNotificationPermission, notificationSupported, currentNotificationPermission } from "@/hooks/useCycleReminder";
 
@@ -34,6 +36,7 @@ const ALL_STORAGE_KEYS = [
   "peppies_nutrition_goals",
   "peppies_steps",
   "peppies_sleep",
+  "peppies_affiliate",
 ];
 
 function SectionLabel({ label }: { label: string }) {
@@ -226,8 +229,10 @@ export function Settings() {
   const [showAbout, setShowAbout] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showAffiliate, setShowAffiliate] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { injections } = useInjections();
+  const { affiliate, hasAffiliate } = useAffiliate();
   const { prefs, toggleWeightUnit, setCycleReminders } = usePreferences();
   const [notifError, setNotifError] = useState<string | null>(null);
 
@@ -365,6 +370,24 @@ export function Settings() {
                   ))}
                 </div>
               }
+            />
+          </div>
+
+          <SectionLabel label="Shop & Resources" />
+          <div className="flex flex-col gap-2 mb-2">
+            <Row
+              icon={ShoppingBag}
+              label="Affiliate / Referral"
+              sublabel={
+                hasAffiliate
+                  ? affiliate.name
+                    ? `${affiliate.name}${affiliate.code ? ` · ${affiliate.code}` : ""}`
+                    : "Referral link saved"
+                  : "Save your peptide vendor referral link"
+              }
+              teal={hasAffiliate}
+              testId="settings-affiliate"
+              onClick={() => setShowAffiliate(true)}
             />
           </div>
 
@@ -513,6 +536,7 @@ export function Settings() {
         )}
         {showAbout && <AboutSheet onClose={() => setShowAbout(false)} />}
         {showHowTo && <HowToSheet onClose={() => setShowHowTo(false)} />}
+        {showAffiliate && <AffiliateSheet onClose={() => setShowAffiliate(false)} />}
         {showProfile && <ProfileSheet onClose={() => setShowProfile(false)} />}
       </AnimatePresence>
     </>
