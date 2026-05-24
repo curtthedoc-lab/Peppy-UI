@@ -319,7 +319,7 @@ export function Home() {
 
   return (
     <>
-      <div className="px-5 pt-14 pb-4 flex flex-col">
+      <div className="px-5 pt-5 pb-4 flex flex-col">
         <header className="mb-6">
           <h1 className="text-[32px] font-bold text-primary tracking-[-0.03em] leading-none">Peppies</h1>
         </header>

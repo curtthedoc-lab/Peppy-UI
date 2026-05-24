@@ -25,7 +25,10 @@ function WeightHistoryRow({ entry, onDelete }: { entry: WeightEntry; onDelete: (
       <div className="flex items-center gap-3">
         <span className="text-[11px] text-muted-foreground/60">{formatDate(entry.date)}</span>
         <button
-          onClick={() => { if (confirm) onDelete(); else { setConfirm(true); setTimeout(() => setConfirm(false), 2500); } }}
+          onClick={() => {
+            if (confirm) onDelete();
+            else { setConfirm(true); setTimeout(() => setConfirm(false), 2500); }
+          }}
           className={`p-1.5 rounded-xl transition-colors ${confirm ? "bg-destructive/15 text-destructive" : "text-muted-foreground/30 hover:text-muted-foreground/60"}`}
         >
           <Trash2 size={13} strokeWidth={2} />
@@ -55,24 +58,33 @@ export function WeightSheet({ onClose }: { onClose: () => void }) {
   const recent = entries.slice(0, 10);
 
   return (
+    // Backdrop — closes on tap outside
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm px-4 pb-6"
+      transition={{ duration: 0.18 }}
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/65 backdrop-blur-sm"
+      style={{ paddingTop: "max(env(safe-area-inset-top, 0px) + 24px, 40px)" }}
       onClick={onClose}
     >
+      {/* Sheet — centered in upper portion so keyboard doesn't obscure it */}
       <motion.div
-        initial={{ y: 80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 80, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        initial={{ y: -20, opacity: 0, scale: 0.97 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        exit={{ y: -16, opacity: 0, scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 340, damping: 30 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[430px] bg-card border border-border/60 rounded-3xl p-6 flex flex-col gap-5 max-h-[85vh] overflow-y-auto"
+        className="w-full mx-4 max-w-[400px] bg-card border border-border/60 rounded-3xl p-6 flex flex-col gap-5 max-h-[80vh] overflow-y-auto"
+        style={{ maxWidth: 400 }}
       >
+        {/* Header */}
         <div className="flex items-center justify-between">
           <h2 className="text-[17px] font-bold">Weight Tracking</h2>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground"
+          >
             <X size={15} strokeWidth={2.5} />
           </button>
         </div>
@@ -100,16 +112,17 @@ export function WeightSheet({ onClose }: { onClose: () => void }) {
         <div className="flex flex-col gap-3">
           <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-widest">Log Weight</p>
           <div className="flex gap-2">
-            <div className="flex-1 relative">
+            <div className="flex-1">
               <input
                 value={value}
                 onChange={(e) => { setValue(e.target.value); setError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && handleLog()}
+                // scrolls the input into view when keyboard opens on iOS
+                onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: "smooth", block: "center" }), 120)}
                 placeholder={unit === "kg" ? "e.g. 82.5" : "e.g. 180"}
                 inputMode="decimal"
-                className="w-full bg-background border border-border/60 rounded-2xl px-4 py-3 text-[15px] placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
+                className="w-full bg-background border border-border/60 rounded-2xl px-4 py-3.5 text-[15px] placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
                 data-testid="weight-input"
-                autoFocus
               />
             </div>
             <div className="flex bg-muted rounded-2xl p-1 gap-1">
