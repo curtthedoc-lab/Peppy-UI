@@ -47,45 +47,78 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
         const videoEl = videoRef.current;
         if (!videoEl) return;
 
-        const controls = await reader.decodeFromConstraints(
-          {
-            audio: false,
-            video: {
-              facingMode: { ideal: "environment" },
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-          },
-          videoEl,
-          (result, err) => {
-            if (cancelled || detectedRef.current) return;
-            if (result) {
-              detectedRef.current = true;
-              const text = result.getText();
-              try {
-                controls.stop();
-              } catch {
-                // ignore
-              }
-              onDetected(text);
-            } else if (err && err.name !== "NotFoundException") {
-              // ignore frame-level decode errors
+        const onResult = (
+          controls: IScannerControls,
+          result: { getText: () => string } | undefined,
+        ) => {
+          if (cancelled || detectedRef.current) return;
+          if (result) {
+            detectedRef.current = true;
+            const text = result.getText();
+            try {
+              controls.stop();
+            } catch {
+              // ignore
             }
-          },
-        );
+            onDetected(text);
+          }
+        };
+
+        // Samsung Internet and some Android browsers throw OverconstrainedError
+        // when `facingMode: { exact: ... }` is used. Use `ideal` first, and if
+        // that still fails for any reason, fall back to default camera.
+        let controls: IScannerControls;
+        try {
+          controls = await reader.decodeFromConstraints(
+            {
+              audio: false,
+              video: {
+                facingMode: { ideal: "environment" },
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+              },
+            },
+            videoEl,
+            (result) => onResult(controls, result ?? undefined),
+          );
+        } catch (innerErr) {
+          if (cancelled) return;
+          // Retry with no facingMode hint — any camera is better than none.
+          controls = await reader.decodeFromConstraints(
+            { audio: false, video: true },
+            videoEl,
+            (result) => onResult(controls, result ?? undefined),
+          );
+          void innerErr;
+        }
+
         if (cancelled) {
           controls.stop();
           return;
         }
+
+        // Samsung Internet occasionally doesn't honor implicit autoplay even
+        // when the video is muted+playsInline — kick it explicitly.
+        try {
+          await videoEl.play();
+        } catch {
+          // play() rejection is non-fatal; the user can tap to start.
+        }
+
         controlsRef.current = controls;
         setStarting(false);
       } catch (e) {
+        const name = e instanceof Error ? e.name : "";
         const msg =
-          e instanceof Error && e.name === "NotAllowedError"
-            ? "Camera permission was denied. Allow camera access in your browser, or enter the barcode manually."
-            : e instanceof Error
-              ? e.message
-              : "Couldn't start the camera.";
+          name === "NotAllowedError" || name === "SecurityError"
+            ? "Camera permission was denied. Allow camera access in your browser settings, or enter the barcode manually."
+            : name === "NotFoundError" || name === "OverconstrainedError"
+              ? "No camera found on this device. You can enter the barcode manually."
+              : name === "NotReadableError"
+                ? "Camera is in use by another app. Close it and try again, or enter the barcode manually."
+                : e instanceof Error
+                  ? e.message
+                  : "Couldn't start the camera.";
         if (!cancelled) {
           setError(msg);
           setStarting(false);
@@ -146,7 +179,9 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
             ref={videoRef}
             playsInline
             muted
-            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            {...({ "webkit-playsinline": "true" } as Record<string, string>)}
+            className="absolute inset-0 w-full h-full object-cover bg-black"
           />
 
           {/* Targeting frame */}
