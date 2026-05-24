@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { uuid } from "@/utils/uuid";
 
 export interface WeightEntry {
   id: string;
@@ -39,7 +40,7 @@ export function useWeight() {
 
   const addEntry = useCallback((value: number, unit: "kg" | "lbs") => {
     const entry: WeightEntry = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       value,
       unit,
       date: new Date().toISOString(),

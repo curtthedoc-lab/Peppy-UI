@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { uuid } from "@/utils/uuid";
 
 export interface Injection {
   id: string;
@@ -31,7 +32,7 @@ export function useInjections() {
   const addInjection = useCallback((data: Omit<Injection, "id" | "date">) => {
     const entry: Injection = {
       ...data,
-      id: crypto.randomUUID(),
+      id: uuid(),
       date: new Date().toISOString(),
     };
     setInjections((prev) => {

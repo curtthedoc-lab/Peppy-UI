@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { uuid } from "@/utils/uuid";
 
 export interface Calculation {
   id: string;
@@ -32,7 +33,7 @@ export function useCalculations() {
   const addCalculation = useCallback((data: Omit<Calculation, "id" | "date">) => {
     const entry: Calculation = {
       ...data,
-      id: crypto.randomUUID(),
+      id: uuid(),
       date: new Date().toISOString(),
     };
     setCalculations((prev) => {

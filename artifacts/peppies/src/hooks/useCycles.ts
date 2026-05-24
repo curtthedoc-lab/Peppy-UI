@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { uuid } from "@/utils/uuid";
 
 export interface Cycle {
   id: string;
@@ -34,7 +35,7 @@ export function useCycles() {
   const pastCycles = cycles.filter((c) => !!c.endedAt).reverse();
 
   const startCycle = useCallback((data: Omit<Cycle, "id" | "endedAt">) => {
-    const entry: Cycle = { ...data, id: crypto.randomUUID() };
+    const entry: Cycle = { ...data, id: uuid() };
     setCycles((prev) => {
       const ended = prev.map((c) => (!c.endedAt ? { ...c, endedAt: new Date().toISOString() } : c));
       const next = [entry, ...ended];
