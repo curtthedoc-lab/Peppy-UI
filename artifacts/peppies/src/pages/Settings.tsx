@@ -18,6 +18,9 @@ const ALL_STORAGE_KEYS = [
   "peppies_injections",
   "peppies_calculations",
   "peppies_disclaimer_v1",
+  "peppies_cycles",
+  "peppies_weight",
+  "peppies_hydration",
 ];
 
 function SectionLabel({ label }: { label: string }) {
