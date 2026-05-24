@@ -133,7 +133,7 @@ function CycleCard({ onOpen }: { onOpen: () => void }) {
             <p className="text-[12px] text-muted-foreground/70 mt-0.5">{activeCycle ? "Active cycle" : "No active cycle"}</p>
           </div>
         </div>
-        <button onClick={(e) => { e.stopPropagation(); onOpen(); }} className="text-[13px] font-semibold text-primary tracking-wide px-3 py-1.5 rounded-xl hover:bg-primary/10 transition-all" data-testid="button-manage-cycle">
+        <button onClick={(e) => { e.stopPropagation(); onOpen(); }} className="text-[13px] font-semibold text-primary tracking-wide px-3.5 py-2 rounded-xl bg-primary/15 border border-primary/30 shadow-sm shadow-primary/10 active:scale-95 active:bg-primary/25 transition-all" style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }} data-testid="button-manage-cycle">
           {activeCycle ? "Manage" : <span className="flex items-center gap-1"><Plus size={13} strokeWidth={2.5} />Start</span>}
         </button>
       </div>
@@ -222,7 +222,8 @@ function WeightCard({ onOpen }: { onOpen: () => void }) {
           <button
             onClick={onOpen}
             data-testid="button-track-weight"
-            className="text-[13px] font-semibold text-primary tracking-wide px-3 py-1.5 rounded-xl hover:bg-primary/10 active:scale-95 transition-all whitespace-nowrap"
+            style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+            className="text-[13px] font-semibold text-primary tracking-wide px-3.5 py-2 rounded-xl bg-primary/15 border border-primary/30 shadow-sm shadow-primary/10 active:scale-95 active:bg-primary/25 transition-all whitespace-nowrap"
           >
             {latest ? "Log" : "Track"}
           </button>
@@ -346,7 +347,7 @@ export function Home() {
                   <p className="text-[12px] text-muted-foreground/70 mt-0.5">Track your doses</p>
                 </div>
               </div>
-              <Link href="/log" className="text-[13px] font-semibold text-primary tracking-wide px-3 py-1.5 rounded-xl hover:bg-primary/10 active:scale-95 transition-all" data-testid="button-log-now">+ Log</Link>
+              <Link href="/log" className="text-[13px] font-semibold text-primary tracking-wide px-3.5 py-2 rounded-xl bg-primary/15 border border-primary/30 shadow-sm shadow-primary/10 active:scale-95 active:bg-primary/25 transition-all inline-flex items-center" style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }} data-testid="button-log-now">+ Log</Link>
             </div>
             {recent.length === 0 ? (
               <p className="text-[13px] text-muted-foreground/60 py-1">No injections logged yet</p>
