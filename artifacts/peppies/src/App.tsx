@@ -11,6 +11,7 @@ import { Home } from "@/pages/Home";
 import { Log } from "@/pages/Log";
 import { Calculator } from "@/pages/Calculator";
 import { History } from "@/pages/History";
+import { Nutrition } from "@/pages/Nutrition";
 import { Settings } from "@/pages/Settings";
 import { Disclaimer, useDisclaimerAccepted } from "@/components/Disclaimer";
 import NotFound from "@/pages/not-found";
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/log" component={Log} />
       <Route path="/calculator" component={Calculator} />
+      <Route path="/nutrition" component={Nutrition} />
       <Route path="/history" component={History} />
       <Route path="/settings" component={Settings} />
       <Route component={NotFound} />

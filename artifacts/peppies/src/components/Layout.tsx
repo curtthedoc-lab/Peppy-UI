@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, PenLine, Calculator, Clock, Settings } from "lucide-react";
+import { Home, PenLine, Calculator, Apple, Clock, Settings } from "lucide-react";
 import { ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -7,6 +7,7 @@ const navItems = [
   { href: "/", icon: Home, label: "Home" },
   { href: "/log", icon: PenLine, label: "Log" },
   { href: "/calculator", icon: Calculator, label: "Calc" },
+  { href: "/nutrition", icon: Apple, label: "Food" },
   { href: "/history", icon: Clock, label: "History" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
