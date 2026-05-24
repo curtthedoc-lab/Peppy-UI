@@ -49,18 +49,19 @@ export function Layout({ children }: { children: ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className="flex flex-col items-center justify-center flex-1 h-full gap-1 relative"
+              className="flex flex-col items-center justify-center flex-1 h-full gap-1 relative select-none cursor-pointer active:opacity-70"
+              style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
               data-testid={`nav-${item.label.toLowerCase()}`}
             >
               <motion.div
-                className="relative flex items-center justify-center"
+                className="relative flex items-center justify-center pointer-events-none"
                 whileTap={{ scale: 0.88 }}
                 transition={{ type: "spring", stiffness: 400, damping: 22 }}
               >
                 {isActive && (
                   <motion.div
                     layoutId="nav-pill"
-                    className="absolute inset-0 -m-2.5 rounded-2xl bg-primary/12"
+                    className="absolute inset-0 -m-2.5 rounded-2xl bg-primary/12 pointer-events-none"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}
