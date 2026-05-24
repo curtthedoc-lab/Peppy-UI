@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { PenLine, Scale, Droplets } from "lucide-react";
+import { PenLine, Scale, Droplets, Flame, CalendarDays, FlaskConical } from "lucide-react";
 import { Link } from "wouter";
 import { useInjections, Injection } from "@/hooks/useInjections";
 
@@ -20,20 +20,78 @@ const cardVariants = {
   },
 };
 
+function toDateKey(iso: string) {
+  return iso.slice(0, 10);
+}
+
+function computeStreak(injections: Injection[]): number {
+  if (injections.length === 0) return 0;
+  const days = new Set(injections.map((i) => toDateKey(i.date)));
+  const today = toDateKey(new Date().toISOString());
+  const yesterday = toDateKey(new Date(Date.now() - 86400000).toISOString());
+  let streak = 0;
+  let cursor = days.has(today) ? today : days.has(yesterday) ? yesterday : null;
+  if (!cursor) return 0;
+  while (days.has(cursor)) {
+    streak++;
+    const prev = new Date(cursor);
+    prev.setDate(prev.getDate() - 1);
+    cursor = toDateKey(prev.toISOString());
+  }
+  return streak;
+}
+
+function computeWeekCount(injections: Injection[]): number {
+  const now = Date.now();
+  return injections.filter((i) => now - new Date(i.date).getTime() < 7 * 24 * 60 * 60 * 1000).length;
+}
+
+function computeTopPeptide(injections: Injection[]): string {
+  if (injections.length === 0) return "—";
+  const counts: Record<string, number> = {};
+  injections.forEach((i) => { counts[i.peptide] = (counts[i.peptide] ?? 0) + 1; });
+  return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+}
+
+function StatTile({
+  icon: Icon,
+  value,
+  label,
+  highlight,
+  delay,
+}: {
+  icon: typeof Flame;
+  value: string | number;
+  label: string;
+  highlight?: boolean;
+  delay: number;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 280, damping: 26, delay }}
+      className="flex-1 bg-card rounded-2xl border border-border/60 px-3 py-3.5 flex flex-col items-center gap-1.5"
+    >
+      <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${highlight ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground/60"}`}>
+        <Icon size={14} strokeWidth={2} />
+      </div>
+      <span className={`text-[20px] font-bold tracking-[-0.03em] leading-none ${highlight ? "text-primary" : "text-foreground"}`}>
+        {value}
+      </span>
+      <span className="text-[10px] font-medium text-muted-foreground/60 text-center leading-tight uppercase tracking-wide">
+        {label}
+      </span>
+    </motion.div>
+  );
+}
+
 function ActionButton({ href, label, testId }: { href?: string; label: string; testId: string }) {
   const cls = "text-[13px] font-semibold text-primary tracking-wide px-3 py-1.5 rounded-xl hover:bg-primary/10 active:scale-95 transition-all duration-150 whitespace-nowrap";
   if (href) {
-    return (
-      <Link href={href} className={cls} data-testid={testId}>
-        {label}
-      </Link>
-    );
+    return <Link href={href} className={cls} data-testid={testId}>{label}</Link>;
   }
-  return (
-    <button className={cls} data-testid={testId}>
-      {label}
-    </button>
-  );
+  return <button className={cls} data-testid={testId}>{label}</button>;
 }
 
 function CardIcon({ icon: Icon }: { icon: typeof PenLine }) {
@@ -76,13 +134,46 @@ export function Home() {
   const { injections } = useInjections();
   const recent = injections.slice(0, 3);
 
+  const streak = computeStreak(injections);
+  const weekCount = computeWeekCount(injections);
+  const topPeptide = computeTopPeptide(injections);
+
+  const shortTopPeptide = topPeptide.length > 7
+    ? topPeptide.split(/[-\s]/)[0]
+    : topPeptide;
+
   return (
     <div className="px-5 pt-14 pb-4 flex flex-col">
-      <header className="mb-8">
+      <header className="mb-6">
         <h1 className="text-[32px] font-bold text-primary tracking-[-0.03em] leading-none">
           Peppies
         </h1>
       </header>
+
+      {/* Stats Strip */}
+      <div className="flex gap-2.5 mb-5" data-testid="stats-strip">
+        <StatTile
+          icon={Flame}
+          value={streak}
+          label={streak === 1 ? "Day Streak" : "Day Streak"}
+          highlight={streak > 0}
+          delay={0.04}
+        />
+        <StatTile
+          icon={CalendarDays}
+          value={weekCount}
+          label="This Week"
+          highlight={weekCount > 0}
+          delay={0.1}
+        />
+        <StatTile
+          icon={FlaskConical}
+          value={shortTopPeptide}
+          label="Top Peptide"
+          highlight={topPeptide !== "—"}
+          delay={0.16}
+        />
+      </div>
 
       <motion.div
         variants={containerVariants}
