@@ -9,6 +9,7 @@ import { useHydration } from "@/hooks/useHydration";
 import { CycleSheet } from "@/components/CycleSheet";
 import { WeightSheet } from "@/components/WeightSheet";
 import { peptideInitials, shortPeptideName } from "@/utils/peptideName";
+import { usePreferences } from "@/hooks/usePreferences";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -175,6 +176,7 @@ function CycleCard({ onOpen }: { onOpen: () => void }) {
 
 function WeightCard({ onOpen }: { onOpen: () => void }) {
   const { latest, previous, trend, entries } = useWeight();
+  const { prefs } = usePreferences();
   const sparkValues = [...entries].reverse().slice(-7).map((e) => e.value);
 
   return (
@@ -203,7 +205,7 @@ function WeightCard({ onOpen }: { onOpen: () => void }) {
           ) : (
             <>
               <span className="text-[40px] font-bold tracking-[-0.04em] leading-none text-foreground/30">--</span>
-              <span className="text-[17px] font-medium text-muted-foreground/40 ml-1.5">kg</span>
+              <span className="text-[17px] font-medium text-muted-foreground/40 ml-1.5">{prefs.weightUnit}</span>
             </>
           )}
         </div>

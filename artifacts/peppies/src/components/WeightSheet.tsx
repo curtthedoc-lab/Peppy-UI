@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { useWeight, WeightEntry } from "@/hooks/useWeight";
+import { usePreferences } from "@/hooks/usePreferences";
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -40,8 +41,9 @@ function WeightHistoryRow({ entry, onDelete }: { entry: WeightEntry; onDelete: (
 
 export function WeightSheet({ onClose }: { onClose: () => void }) {
   const { entries, latest, trend, addEntry, deleteEntry } = useWeight();
+  const { prefs } = usePreferences();
   const [value, setValue] = useState("");
-  const [unit, setUnit] = useState<"kg" | "lbs">(latest?.unit ?? "kg");
+  const [unit, setUnit] = useState<"kg" | "lbs">(latest?.unit ?? prefs.weightUnit);
   const [error, setError] = useState("");
 
   const handleLog = () => {

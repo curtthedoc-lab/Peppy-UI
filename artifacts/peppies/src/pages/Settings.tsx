@@ -1,11 +1,12 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Bell, Scale, Moon, Info, ChevronRight, Trash2, AlertTriangle, Download, CheckCheck, Upload, FileJson } from "lucide-react";
+import { User, Bell, Scale, Info, ChevronRight, Trash2, AlertTriangle, Download, CheckCheck, Upload, FileJson } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useInjections } from "@/hooks/useInjections";
 import { exportInjectionsAsCsv } from "@/utils/exportCsv";
 import { exportBackupAsJson, parseBackupFile, applyBackup, summarizeBackup, BackupFile } from "@/utils/backup";
 import { AboutSheet } from "@/components/AboutSheet";
+import { usePreferences } from "@/hooks/usePreferences";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -23,6 +24,7 @@ const ALL_STORAGE_KEYS = [
   "peppies_cycles",
   "peppies_weight",
   "peppies_hydration",
+  "peppies_preferences",
 ];
 
 function SectionLabel({ label }: { label: string }) {
@@ -214,6 +216,7 @@ export function Settings() {
   const [showAbout, setShowAbout] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { injections } = useInjections();
+  const { prefs, toggleWeightUnit } = usePreferences();
 
   const handleReset = () => {
     ALL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
@@ -295,25 +298,24 @@ export function Settings() {
             />
             <Row
               icon={Scale}
-              label="Units"
-              sublabel="Weight and measurement"
+              label="Weight Units"
+              sublabel={prefs.weightUnit === "kg" ? "Kilograms (kg)" : "Pounds (lbs)"}
               testId="settings-units"
+              onClick={toggleWeightUnit}
               right={
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[12px] text-muted-foreground font-medium">kg</span>
-                  <ChevronRight size={16} className="text-muted-foreground/50" strokeWidth={2} />
-                </div>
-              }
-            />
-            <Row
-              icon={Moon}
-              label="Theme"
-              sublabel="Appearance"
-              testId="settings-theme"
-              right={
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[12px] text-muted-foreground font-medium">Dark</span>
-                  <ChevronRight size={16} className="text-muted-foreground/50" strokeWidth={2} />
+                <div className="flex bg-muted rounded-xl p-0.5 gap-0.5" data-testid="units-toggle">
+                  {(["kg", "lbs"] as const).map((u) => (
+                    <span
+                      key={u}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
+                        prefs.weightUnit === u
+                          ? "bg-card text-foreground shadow-sm"
+                          : "text-muted-foreground/60"
+                      }`}
+                    >
+                      {u}
+                    </span>
+                  ))}
                 </div>
               }
             />

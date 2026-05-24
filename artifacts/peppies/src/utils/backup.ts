@@ -4,6 +4,7 @@ const BACKUP_KEYS = [
   "peppies_cycles",
   "peppies_weight",
   "peppies_hydration",
+  "peppies_preferences",
 ] as const;
 
 type BackupKey = (typeof BACKUP_KEYS)[number];
@@ -14,6 +15,7 @@ const KEY_SHAPES: Record<BackupKey, "array" | "object"> = {
   peppies_cycles: "array",
   peppies_weight: "array",
   peppies_hydration: "object",
+  peppies_preferences: "object",
 };
 
 const SCHEMA_VERSION = 1;
