@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Trash2, FlaskConical, Download, CheckCheck, ChevronDown, NotebookPen } from "lucide-react";
 import { useInjections, Injection } from "@/hooks/useInjections";
 import { exportInjectionsAsCsv } from "@/utils/exportCsv";
+import { peptideInitials } from "@/utils/peptideName";
 import { useState, useRef, useEffect } from "react";
 
 function formatDate(iso: string) {
@@ -18,20 +19,6 @@ function formatDate(iso: string) {
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-}
-
-function peptideInitials(name: string) {
-  const cleaned = name.replace(/\([^)]*\)/g, " ");
-  const tokens = cleaned
-    .split(/[-\s+/]+/)
-    .map((t) => t.replace(/[^A-Za-z]/g, ""))
-    .filter((t) => t.length > 0);
-  if (tokens.length === 0) {
-    const letters = name.replace(/[^A-Za-z]/g, "");
-    return (letters.slice(0, 2) || "?").toUpperCase();
-  }
-  if (tokens.length === 1) return tokens[0].slice(0, 2).toUpperCase();
-  return (tokens[0][0] + tokens[1][0]).toUpperCase();
 }
 
 function NotesEditor({

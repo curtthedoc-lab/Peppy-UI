@@ -8,6 +8,7 @@ import { useWeight } from "@/hooks/useWeight";
 import { useHydration } from "@/hooks/useHydration";
 import { CycleSheet } from "@/components/CycleSheet";
 import { WeightSheet } from "@/components/WeightSheet";
+import { peptideInitials, shortPeptideName } from "@/utils/peptideName";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -102,12 +103,12 @@ function RecentInjectionRow({ inj }: { inj: Injection }) {
       <div className="flex items-center gap-2.5 min-w-0">
         <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
           <span className="text-[9px] font-bold tracking-tight">
-            {inj.peptide.split(/[-\s]/).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+            {peptideInitials(inj.peptide)}
           </span>
         </div>
         <div className="min-w-0">
           <p className="text-[13px] font-semibold truncate leading-tight">{inj.peptide}</p>
-          <p className="text-[11px] text-muted-foreground/70 leading-tight">{inj.dose} {inj.units} · {inj.site}</p>
+          <p className="text-[11px] text-muted-foreground/70 truncate leading-tight">{inj.dose} {inj.units} · {inj.site}</p>
         </div>
       </div>
       <span className="text-[11px] text-muted-foreground/60 flex-shrink-0 ml-2">{formatRelative(inj.date)}</span>
@@ -315,7 +316,7 @@ export function Home() {
   const streak = computeStreak(injections);
   const weekCount = computeWeekCount(injections);
   const topPeptide = computeTopPeptide(injections);
-  const shortTopPeptide = topPeptide.length > 7 ? topPeptide.split(/[-\s]/)[0] : topPeptide;
+  const shortTopPeptide = topPeptide === "—" ? topPeptide : shortPeptideName(topPeptide, 9);
 
   return (
     <>
