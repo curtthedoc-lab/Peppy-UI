@@ -27,6 +27,7 @@ type FormData = z.infer<typeof schema>;
 function NumInput({
   label,
   unit,
+  unitNode,
   placeholder,
   error,
   testId,
@@ -34,6 +35,7 @@ function NumInput({
 }: {
   label: string;
   unit: string;
+  unitNode?: React.ReactNode;
   placeholder: string;
   error?: string;
   testId: string;
@@ -52,9 +54,11 @@ function NumInput({
           className="flex-1 bg-transparent px-4 py-3.5 text-[15px] font-medium outline-none placeholder:text-muted-foreground/40 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           {...props}
         />
-        <span className="px-4 text-[13px] font-semibold text-muted-foreground/60 border-l border-border/40 py-3.5 bg-muted/30">
-          {unit}
-        </span>
+        {unitNode ?? (
+          <span className="px-4 text-[13px] font-semibold text-muted-foreground/60 border-l border-border/40 py-3.5 bg-muted/30">
+            {unit}
+          </span>
+        )}
       </div>
       <AnimatePresence>
         {error && (
@@ -119,6 +123,14 @@ function ResultCard({ result }: { result: { concentration: number; mlRequired: n
   );
 }
 
+function formatDose(doseMcg: number): string {
+  if (doseMcg >= 1000) {
+    const mg = doseMcg / 1000;
+    return `${Number.isInteger(mg) ? mg : mg.toFixed(2)} mg`;
+  }
+  return `${doseMcg} mcg`;
+}
+
 function HistoryRow({ calc }: { calc: Calculation }) {
   const timeAgo = (() => {
     const diffH = Math.floor((Date.now() - new Date(calc.date).getTime()) / (1000 * 60 * 60));
@@ -132,7 +144,7 @@ function HistoryRow({ calc }: { calc: Calculation }) {
     <div className="flex items-center justify-between py-3 border-t border-border/40 first:border-t-0" data-testid={`calc-history-${calc.id}`}>
       <div className="min-w-0">
         <p className="text-[13px] font-semibold">
-          {calc.doseMcg} mcg
+          {formatDose(calc.doseMcg)}
           <span className="text-muted-foreground/60 font-normal"> · {calc.vialMg} mg vial · {calc.bacMl} mL BAC</span>
         </p>
         <p className="text-[12px] text-primary/80 mt-0.5">
@@ -260,6 +272,7 @@ function ReferenceCard({ peptide, onUse }: { peptide: PeptideRef; onUse: (vialMg
 export function Calculator() {
   const { calculations, addCalculation, clearCalculations } = useCalculations();
   const [result, setResult] = useState<{ concentration: number; mlRequired: number; syringeUnits: number } | null>(null);
+  const [doseUnit, setDoseUnit] = useState<"mcg" | "mg">("mcg");
   const formRef = useRef<HTMLDivElement>(null);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
@@ -270,7 +283,8 @@ export function Calculator() {
   const onSubmit = (data: FormData) => {
     const vialMg = Number(data.vialMg);
     const bacMl = Number(data.bacMl);
-    const doseMcg = Number(data.doseMcg);
+    const doseInput = Number(data.doseMcg);
+    const doseMcg = doseUnit === "mg" ? doseInput * 1000 : doseInput;
     const concentration = vialMg / bacMl;
     const mlRequired = doseMcg / (concentration * 1000);
     const syringeUnits = mlRequired * 100;
@@ -284,6 +298,10 @@ export function Calculator() {
     const bac = peptide.bacByVialMg?.[vialMg] ?? peptide.bacWaterMl;
     setValue("vialMg", String(vialMg), { shouldValidate: false });
     setValue("bacMl", String(bac), { shouldValidate: false });
+    setValue("doseMcg", "", { shouldValidate: false });
+    // Auto-pick mg input for peptides whose per-unit yield is measured in mg
+    // (e.g. L-Carnitine, L-Glutathione) — those typically dose in milligrams.
+    setDoseUnit(/\bmg per unit\b/i.test(peptide.perUnit) ? "mg" : "mcg");
     setResult(null);
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -319,10 +337,29 @@ export function Calculator() {
           />
           <NumInput
             label="Desired Dose"
-            unit="mcg"
-            placeholder="e.g. 250"
+            unit={doseUnit}
+            placeholder={doseUnit === "mg" ? "e.g. 500" : "e.g. 250"}
             testId="input-dose-mcg"
             error={errors.doseMcg?.message}
+            unitNode={
+              <div className="flex border-l border-border/40 bg-muted/30 p-1 gap-1">
+                {(["mcg", "mg"] as const).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    onClick={() => setDoseUnit(u)}
+                    data-testid={`dose-unit-${u}`}
+                    className={`px-3 py-2 text-[12px] font-semibold rounded-lg transition-colors ${
+                      doseUnit === u
+                        ? "bg-primary/15 text-primary"
+                        : "text-muted-foreground/60 hover:text-muted-foreground"
+                    }`}
+                  >
+                    {u}
+                  </button>
+                ))}
+              </div>
+            }
             {...register("doseMcg")}
           />
 
