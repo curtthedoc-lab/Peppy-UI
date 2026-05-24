@@ -47,9 +47,6 @@ export function Home() {
   return (
     <div className="px-5 pt-14 pb-4 flex flex-col">
       <header className="mb-8">
-        <p className="text-[13px] font-medium text-muted-foreground/80 tracking-wide uppercase mb-1">
-          Good morning
-        </p>
         <h1 className="text-[32px] font-bold text-primary tracking-[-0.03em] leading-none">
           Peppies
         </h1>
