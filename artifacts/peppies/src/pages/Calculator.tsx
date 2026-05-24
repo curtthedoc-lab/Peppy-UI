@@ -145,7 +145,8 @@ function HistoryRow({ calc }: { calc: Calculation }) {
 }
 
 function parseVialSizes(input: string, fallback: number): number[] {
-  const matches = Array.from(input.matchAll(/(\d+(?:\.\d+)?)\s*mg(?!\s*\/)/gi));
+  const stripped = input.replace(/\([^)]*\)/g, "");
+  const matches = Array.from(stripped.matchAll(/(\d+(?:\.\d+)?)\s*mg(?!\s*\/)/gi));
   const nums = matches.map((m) => Number(m[1])).filter((n) => n > 0);
   const unique = Array.from(new Set(nums)).sort((a, b) => a - b);
   return unique.length > 0 ? unique : [fallback];

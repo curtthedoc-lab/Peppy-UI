@@ -293,7 +293,7 @@ export const PEPTIDE_REFERENCE: PeptideRef[] = [
     bacWaterMl: 3,
     vialMg: 80,
     concentration: "26.67 mg/mL total (3.33 KPV + 3.33 BPC-157 + 3.33 TB-500 + 16.67 GHK-Cu mg/mL)",
-    perUnit: "≈ 266.7 mcg per unit (blend total)",
+    perUnit: "≈ 267 mcg per unit (total peptide blend)",
     notes: "Pre-mixed multi-peptide repair/recovery blend: KPV + BPC-157 + TB-500 + GHK-Cu (10/10/10/50 mg = 80 mg per vial). Subcutaneous, once daily. Blue-green tint after reconstitution is normal (GHK-Cu). Protect vial from light. Dose to the BPC-157 component as the limiting factor. Store at 2–8 °C.",
     source: "peptidedosages.com",
   },
