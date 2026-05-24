@@ -55,81 +55,42 @@ function MedicalBodySVG() {
       style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
       aria-hidden
     >
-      {/* Head */}
       <ellipse cx="100" cy="40" rx="26" ry="30" fill={F} stroke={S} strokeWidth={W} />
-
-      {/* Neck */}
       <path d="M 88 68 C 86 74, 85 80, 86 86 L 114 86 C 115 80, 114 74, 112 68 Z" fill={F} />
       <path d="M 86 86 C 78 86, 68 88, 62 92 L 138 92 C 132 88, 122 86, 114 86 Z" fill={F} />
-
-      {/* Torso — wide chest, nipped waist, slight hip */}
+      {/* Torso */}
       <path
-        d="M 62 92
-           C 48 94, 40 104, 40 118
-           C 38 138, 38 162, 40 182
-           C 42 200, 48 215, 50 232
-           C 50 242, 50 252, 50 260
-           L 150 260
-           C 150 252, 150 242, 150 232
-           C 152 215, 158 200, 160 182
-           C 162 162, 162 138, 160 118
-           C 160 104, 152 94, 138 92 Z"
+        d="M 62 92 C 48 94,40 104,40 118 C 38 138,38 162,40 182 C 42 200,48 215,50 232
+           C 50 242,50 252,50 260 L 150 260 C 150 252,150 242,150 232
+           C 152 215,158 200,160 182 C 162 162,162 138,160 118
+           C 160 104,152 94,138 92 Z"
         fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
-
-      {/* Left arm (viewer left = patient right) */}
+      {/* Left arm */}
       <path
-        d="M 40 118
-           C 32 128, 24 152, 22 176
-           L 20 238
-           C 18 254, 26 262, 38 262
-           L 52 262
-           C 60 260, 62 250, 60 236
-           L 58 176
-           C 58 154, 54 128, 50 118 Z"
+        d="M 40 118 C 32 128,24 152,22 176 L 20 238 C 18 254,26 262,38 262
+           L 52 262 C 60 260,62 250,60 236 L 58 176 C 58 154,54 128,50 118 Z"
         fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
-
-      {/* Right arm (viewer right = patient left) */}
+      {/* Right arm */}
       <path
-        d="M 160 118
-           C 168 128, 176 152, 178 176
-           L 180 238
-           C 182 254, 174 262, 162 262
-           L 148 262
-           C 140 260, 138 250, 140 236
-           L 142 176
-           C 142 154, 146 128, 150 118 Z"
+        d="M 160 118 C 168 128,176 152,178 176 L 180 238 C 182 254,174 262,162 262
+           L 148 262 C 140 260,138 250,140 236 L 142 176 C 142 154,146 128,150 118 Z"
         fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
-
       {/* Left leg */}
       <path
-        d="M 50 260
-           C 44 278, 40 306, 38 334
-           L 36 428
-           C 34 446, 46 452, 64 450
-           L 80 450
-           C 88 448, 90 440, 88 430
-           L 88 336
-           C 90 308, 92 280, 94 262 Z"
+        d="M 50 260 C 44 278,40 306,38 334 L 36 428 C 34 446,46 452,64 450
+           L 80 450 C 88 448,90 440,88 430 L 88 336 C 90 308,92 280,94 262 Z"
         fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
-
       {/* Right leg */}
       <path
-        d="M 150 260
-           C 156 278, 160 306, 162 334
-           L 164 428
-           C 166 446, 154 452, 136 450
-           L 120 450
-           C 112 448, 110 440, 112 430
-           L 112 336
-           C 110 308, 108 280, 106 262 Z"
+        d="M 150 260 C 156 278,160 306,162 334 L 164 428 C 166 446,154 452,136 450
+           L 120 450 C 112 448,110 440,112 430 L 112 336 C 110 308,108 280,106 262 Z"
         fill={F} stroke={S} strokeWidth={W} strokeLinejoin="round"
       />
-
-      {/* Clavicle lines */}
+      {/* Clavicles */}
       <path d="M 88 92 Q 74 100 64 98" stroke={S} strokeWidth="0.9" fill="none" opacity="0.4" strokeLinecap="round" />
       <path d="M 112 92 Q 126 100 136 98" stroke={S} strokeWidth="0.9" fill="none" opacity="0.4" strokeLinecap="round" />
       {/* Midline */}
@@ -193,10 +154,9 @@ function Hotspot({
         zIndex: state === "selected" ? 10 : state === "lastUsed" ? 9 : 8,
       }}
     >
-      {/* 42 px invisible touch target */}
       <motion.button
-        whileTap={{ scale: 0.75 }}
-        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        whileTap={{ scale: 0.72 }}
+        transition={{ type: "spring", stiffness: 420, damping: 18 }}
         onClick={onClick}
         data-testid={`site-${site.name.toLowerCase().replace(/\s+/g, "-")}`}
         title={site.name}
@@ -207,13 +167,11 @@ function Hotspot({
         }}
       >
         <motion.div
-          animate={state === "selected" ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+          animate={state === "selected" ? { scale: [1, 1.18, 1] } : { scale: 1 }}
           transition={{ duration: 0.35, ease: "easeOut" }}
           style={DOT_STYLE[state]}
         />
       </motion.button>
-
-      {/* Suggested dot badge */}
       {isSuggested && state !== "selected" && (
         <div
           style={{
@@ -241,9 +199,9 @@ function DuplicateWarning({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 6 }}
       transition={{ type: "spring", stiffness: 360, damping: 32 }}
-      className="mx-6 mb-3 rounded-2xl border border-orange-400/22 bg-orange-500/7 p-4"
+      className="mx-5 rounded-2xl border border-orange-400/22 bg-orange-500/7 p-4"
     >
-      <div className="flex items-start gap-3 mb-3.5">
+      <div className="flex items-start gap-3 mb-3">
         <div className="w-7 h-7 rounded-xl bg-orange-500/15 flex items-center justify-center text-orange-400 flex-shrink-0 mt-0.5">
           <AlertTriangle size={13} strokeWidth={2.5} />
         </div>
@@ -281,7 +239,7 @@ function LegendDot({ dotStyle, label }: { dotStyle: React.CSSProperties; label: 
   return (
     <div className="flex items-center gap-1.5">
       <div style={{ width: 9, height: 9, borderRadius: "50%", flexShrink: 0, ...dotStyle }} />
-      <span className="text-[10px] text-muted-foreground/45 font-medium tracking-wide">{label}</span>
+      <span className="text-[10px] font-medium tracking-wide" style={{ color: "hsl(220 10% 45%)" }}>{label}</span>
     </div>
   );
 }
@@ -294,10 +252,6 @@ function formatRelative(iso: string) {
   const d = Math.floor(h / 24);
   return d === 1 ? "yesterday" : `${d}d ago`;
 }
-
-// Body map fixed pixel dimensions (SVG viewBox is 200 × 480)
-const MAP_W = 148;
-const MAP_H = Math.round(MAP_W * (480 / 200)); // 355
 
 // ── Main sheet ────────────────────────────────────────────────────────────────
 export interface BodyMapSheetProps {
@@ -326,7 +280,6 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
       setPendingConfirm(name);
     } else {
       onSelect(name);
-      // brief pause so the pill + glow are visible before the sheet closes
       setTimeout(onClose, 340);
     }
   };
@@ -339,60 +292,64 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
   };
 
   return (
-    // ── Backdrop ──
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.22 }}
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      style={{ background: "hsl(220 20% 4% / 0.78)", backdropFilter: "blur(6px)" }}
-      onClick={onClose}
-    >
-      {/* ── Sheet ── */}
+    // Fixed full-screen container
+    <div className="fixed inset-0 z-50">
+      {/* Backdrop — separate fade layer */}
       <motion.div
-        initial={{ y: 160, opacity: 0.4 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 160, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 280, damping: 30, mass: 0.9 }}
+        className="absolute inset-0"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        style={{ background: "hsl(220 20% 4% / 0.80)", backdropFilter: "blur(6px)" }}
+        onClick={onClose}
+      />
+
+      {/* Sheet — slides up to cover full screen */}
+      <motion.div
+        className="absolute inset-x-0 bottom-0 flex flex-col"
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", stiffness: 280, damping: 32, mass: 0.9 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[430px] flex flex-col overflow-y-auto"
         style={{
-          maxHeight: "94vh",
+          top: 0,
           background: "hsl(220 16% 10%)",
-          borderRadius: "32px 32px 0 0",
-          border: "1px solid hsl(220 14% 20%)",
-          boxShadow: "0 -24px 80px hsl(220 20% 3% / 0.85), 0 -4px 16px hsl(220 20% 3% / 0.5)",
+          borderTop: "1px solid hsl(220 14% 20%)",
+          boxShadow: "0 -16px 60px hsl(220 20% 3% / 0.7)",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-2 flex-shrink-0">
-          <div style={{ width: 36, height: 4, borderRadius: 9999, background: "hsl(220 14% 28%)" }} />
+        {/* ── Handle ── */}
+        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+          <div style={{ width: 36, height: 4, borderRadius: 9999, background: "hsl(220 14% 26%)" }} />
         </div>
 
-        {/* Header */}
-        <div className="flex items-start justify-between px-6 pb-4 flex-shrink-0">
+        {/* ── Header ── */}
+        <div className="flex items-start justify-between px-6 pt-2 pb-3 flex-shrink-0">
           <div>
-            <h2 className="text-[19px] font-bold tracking-tight text-foreground leading-tight">
+            <h2 className="text-[19px] font-bold tracking-tight text-foreground">
               Injection Site
             </h2>
-            <p className="text-[12px] mt-1 font-medium" style={{ color: "hsl(220 10% 52%)" }}>
+            <p className="text-[12px] font-medium mt-0.5" style={{ color: "hsl(220 10% 50%)" }}>
               Choose the area you used for this dose
             </p>
           </div>
           <button
             onClick={onClose}
-            className="mt-0.5 w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-            style={{ background: "hsl(220 14% 18%)", color: "hsl(220 10% 52%)" }}
+            className="mt-0.5 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: "hsl(220 14% 18%)", color: "hsl(220 10% 50%)" }}
           >
-            <X size={13} strokeWidth={2.5} />
+            <X size={14} strokeWidth={2.5} />
           </button>
         </div>
 
-        {/* Suggestion banner */}
+        {/* ── Suggestion banner ── */}
         {suggested && (
           <div
-            className="mx-6 mb-3 flex-shrink-0 flex items-center gap-2.5 px-3.5 py-2.5"
+            className="mx-5 mb-3 flex-shrink-0 flex items-center gap-2.5 px-3.5 py-2.5"
             style={{
               borderRadius: 16,
               border: "1px solid hsl(152 50% 38% / 0.25)",
@@ -406,17 +363,32 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
           </div>
         )}
 
-        {/* Instruction label */}
+        {/* ── Instruction label ── */}
         <p
-          className="text-center text-[11px] font-semibold tracking-widest uppercase mb-2 flex-shrink-0"
-          style={{ color: "hsl(220 10% 40%)" }}
+          className="text-center text-[10px] font-semibold tracking-widest uppercase mb-2 flex-shrink-0"
+          style={{ color: "hsl(220 10% 38%)" }}
         >
           Tap an injection site
         </p>
 
-        {/* Body map */}
-        <div className="flex justify-center pb-3 flex-shrink-0">
-          <div style={{ position: "relative", width: MAP_W, height: MAP_H, flexShrink: 0 }}>
+        {/* ── Body map — flex-1 so it fills all remaining vertical space ── */}
+        <div
+          className="flex-1 flex items-center justify-center overflow-hidden"
+          style={{ minHeight: 0, paddingBottom: 4 }}
+        >
+          {/*
+            Height comes from flex-1. Width is computed from the aspect ratio.
+            maxWidth caps it on wide screens; maxHeight prevents it growing too tall.
+          */}
+          <div
+            style={{
+              position: "relative",
+              height: "100%",
+              maxHeight: 400,
+              aspectRatio: "200 / 480",
+              flexShrink: 0,
+            }}
+          >
             <MedicalBodySVG />
             {SITE_POINTS.map((site) => {
               const state = getSiteState(site.name, selected, lastUsed, recentSet);
@@ -433,43 +405,41 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
           </div>
         </div>
 
-        {/* Selected pill — appears below body map after tap */}
-        <div className="flex justify-center mb-3 flex-shrink-0" style={{ minHeight: 36 }}>
+        {/* ── Selected pill ── */}
+        <div
+          className="flex justify-center flex-shrink-0"
+          style={{ minHeight: 44, alignItems: "center", display: "flex" }}
+        >
           <AnimatePresence mode="wait">
             {selected && !pendingConfirm && (
-              <motion.div
+              <motion.button
                 key={selected}
-                initial={{ opacity: 0, scale: 0.88, y: 6 }}
+                initial={{ opacity: 0, scale: 0.86, y: 8 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.92, y: 3 }}
+                exit={{ opacity: 0, scale: 0.90, y: 4 }}
                 transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                onClick={() => { onSelect(selected); onClose(); }}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  paddingLeft: 18,
-                  paddingRight: 18,
-                  paddingTop: 8,
-                  paddingBottom: 8,
+                  display: "flex", alignItems: "center", gap: 8,
+                  paddingLeft: 20, paddingRight: 20, paddingTop: 10, paddingBottom: 10,
                   borderRadius: 9999,
                   background: "hsl(174 72% 40%)",
-                  boxShadow: "0 0 20px hsl(174 72% 40% / 0.35)",
-                  cursor: "pointer",
+                  boxShadow: "0 0 22px hsl(174 72% 40% / 0.40)",
+                  border: "none", cursor: "pointer",
                 }}
-                onClick={() => { onSelect(selected); onClose(); }}
               >
-                <div style={{ width: 7, height: 7, borderRadius: "50%", background: "hsl(174 72% 80%)", opacity: 0.8 }} />
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: "hsl(174 72% 84%)", opacity: 0.85 }} />
                 <span style={{ fontSize: 13, fontWeight: 700, color: "hsl(174 72% 96%)", letterSpacing: "-0.01em" }}>
                   Selected: {selected}
                 </span>
-              </motion.div>
+              </motion.button>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Legend */}
+        {/* ── Legend ── */}
         <div
-          className="flex items-center justify-center gap-4 px-6 py-3 flex-shrink-0"
+          className="flex items-center justify-center gap-4 px-5 py-3 flex-shrink-0"
           style={{ borderTop: "1px solid hsl(220 14% 16%)" }}
         >
           <LegendDot
@@ -490,7 +460,7 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
           />
         </div>
 
-        {/* Duplicate warning */}
+        {/* ── Duplicate warning (slides in above last-used) ── */}
         <AnimatePresence>
           {pendingConfirm && (
             <DuplicateWarning
@@ -501,29 +471,30 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
           )}
         </AnimatePresence>
 
-        {/* Last used footer */}
+        {/* ── Last used footer ── */}
         {lastUsed && !pendingConfirm && (
           <div
             className="px-6 py-3 flex items-center justify-between flex-shrink-0"
             style={{ borderTop: "1px solid hsl(220 14% 16%)" }}
           >
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: "hsl(220 10% 38%)" }}>
+              <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5"
+                style={{ color: "hsl(220 10% 36%)" }}>
                 Last Used
               </p>
-              <p className="text-[14px] font-semibold text-foreground/85">{lastUsed}</p>
+              <p className="text-[14px] font-semibold" style={{ color: "hsl(220 10% 80%)" }}>{lastUsed}</p>
             </div>
             {lastUsedDate && (
-              <p className="text-[12px]" style={{ color: "hsl(220 10% 42%)" }}>
+              <p className="text-[12px]" style={{ color: "hsl(220 10% 40%)" }}>
                 {formatRelative(lastUsedDate)}
               </p>
             )}
           </div>
         )}
 
-        {/* Bottom safe area spacing */}
-        <div className="h-5 flex-shrink-0" />
+        {/* Safe area bottom */}
+        <div className="flex-shrink-0" style={{ height: "env(safe-area-inset-bottom, 12px)" }} />
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
