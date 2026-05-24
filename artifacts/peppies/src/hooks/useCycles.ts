@@ -1,0 +1,64 @@
+import { useState, useCallback } from "react";
+
+export interface Cycle {
+  id: string;
+  name: string;
+  startDate: string;
+  durationDays?: number;
+  notes?: string;
+  endedAt?: string;
+}
+
+const STORAGE_KEY = "peppies_cycles";
+
+function load(): Cycle[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Cycle[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function save(cycles: Cycle[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cycles));
+}
+
+export function useCycles() {
+  const [cycles, setCycles] = useState<Cycle[]>(load);
+
+  const activeCycle = cycles.find((c) => !c.endedAt) ?? null;
+  const pastCycles = cycles.filter((c) => !!c.endedAt).reverse();
+
+  const startCycle = useCallback((data: Omit<Cycle, "id" | "endedAt">) => {
+    const entry: Cycle = { ...data, id: crypto.randomUUID() };
+    setCycles((prev) => {
+      const ended = prev.map((c) => (!c.endedAt ? { ...c, endedAt: new Date().toISOString() } : c));
+      const next = [entry, ...ended];
+      save(next);
+      return next;
+    });
+  }, []);
+
+  const endCycle = useCallback((id: string) => {
+    setCycles((prev) => {
+      const next = prev.map((c) => (c.id === id ? { ...c, endedAt: new Date().toISOString() } : c));
+      save(next);
+      return next;
+    });
+  }, []);
+
+  const deleteCycle = useCallback((id: string) => {
+    setCycles((prev) => {
+      const next = prev.filter((c) => c.id !== id);
+      save(next);
+      return next;
+    });
+  }, []);
+
+  return { cycles, activeCycle, pastCycles, startCycle, endCycle, deleteCycle };
+}
+
+export function daysSince(isoDate: string): number {
+  return Math.floor((Date.now() - new Date(isoDate).getTime()) / (1000 * 60 * 60 * 24));
+}
