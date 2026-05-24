@@ -1,11 +1,12 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Bell, Scale, Info, ChevronRight, Trash2, AlertTriangle, Download, CheckCheck, Upload, FileJson } from "lucide-react";
+import { User, Bell, Scale, Info, ChevronRight, Trash2, AlertTriangle, Download, CheckCheck, Upload, FileJson, BookOpen } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useInjections } from "@/hooks/useInjections";
 import { exportInjectionsAsCsv } from "@/utils/exportCsv";
 import { exportBackupAsJson, parseBackupFile, applyBackup, summarizeBackup, BackupFile } from "@/utils/backup";
 import { AboutSheet } from "@/components/AboutSheet";
+import { HowToSheet } from "@/components/HowToSheet";
 import { ProfileSheet } from "@/components/ProfileSheet";
 import { usePreferences } from "@/hooks/usePreferences";
 import { requestNotificationPermission, notificationSupported, currentNotificationPermission } from "@/hooks/useCycleReminder";
@@ -218,6 +219,7 @@ export function Settings() {
   const [importError, setImportError] = useState<string | null>(null);
   const [restoreDone, setRestoreDone] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showHowTo, setShowHowTo] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { injections } = useInjections();
@@ -364,6 +366,13 @@ export function Settings() {
           <SectionLabel label="Support" />
           <div className="flex flex-col gap-2 mb-2">
             <Row
+              icon={BookOpen}
+              label="How to use Peppies"
+              sublabel="Quick walkthrough of the main features"
+              testId="settings-how-to"
+              onClick={() => setShowHowTo(true)}
+            />
+            <Row
               icon={Info}
               label="About Peppies"
               sublabel="Version 1.0.0"
@@ -498,6 +507,7 @@ export function Settings() {
           />
         )}
         {showAbout && <AboutSheet onClose={() => setShowAbout(false)} />}
+        {showHowTo && <HowToSheet onClose={() => setShowHowTo(false)} />}
         {showProfile && <ProfileSheet onClose={() => setShowProfile(false)} />}
       </AnimatePresence>
     </>
