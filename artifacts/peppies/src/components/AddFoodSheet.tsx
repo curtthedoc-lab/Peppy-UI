@@ -170,10 +170,6 @@ export function AddFoodSheet({
     const protein = scaled ? scaled.protein : parseFloat(draft.protein) || 0;
     const carbs = scaled ? scaled.carbs : parseFloat(draft.carbs) || 0;
     const fat = scaled ? scaled.fat : parseFloat(draft.fat) || 0;
-    if (calories <= 0 && protein <= 0 && carbs <= 0 && fat <= 0) {
-      setError("Add at least one nutrition value");
-      return;
-    }
     onSave({
       name,
       calories,
