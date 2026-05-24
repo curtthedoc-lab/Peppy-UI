@@ -8,6 +8,10 @@ export interface PeptideRef {
   perUnit: string;
   notes: string;
   source: string;
+  /** Optional per-vial-size BAC water override (in mL). Used for pre-mixed
+   *  peptides (e.g. L-Carnitine) where each vial size has a different total
+   *  liquid volume rather than a single recommended BAC volume. */
+  bacByVialMg?: Record<number, number>;
 }
 
 export const PEPTIDE_REFERENCE: PeptideRef[] = [
@@ -213,12 +217,13 @@ export const PEPTIDE_REFERENCE: PeptideRef[] = [
     name: "L-Carnitine",
     vialSizes: "500 mg, 600 mg, 1000 mg (pre-mixed 500 mg/mL solution)",
     doseRange: "500–1,000 mg/day (subcutaneous or intramuscular)",
-    bacWaterMl: 0,
+    bacWaterMl: 1,
     vialMg: 500,
     concentration: "500 mg/mL (pre-mixed)",
     perUnit: "= 5 mg per unit",
-    notes: "Pre-mixed solution — no reconstitution required (leave BAC water at 0). Subcutaneous or IM, typically pre-cardio. Supports fatty acid oxidation. Refrigerate after opening; use within 30 days.",
+    notes: "Pre-mixed at 500 mg/mL — no reconstitution required. Total vial volume scales with size (500 mg = 1 mL, 600 mg = 1.2 mL, 1000 mg = 2 mL); the preset loads the matching volume into the BAC field so the math works. Subcutaneous or IM, typically pre-cardio. Refrigerate after opening; use within 30 days.",
     source: "peptidedosages.com",
+    bacByVialMg: { 500: 1, 600: 1.2, 1000: 2 },
   },
   {
     name: "L-Glutathione",

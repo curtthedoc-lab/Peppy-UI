@@ -199,7 +199,11 @@ function ReferenceCard({ peptide, onUse }: { peptide: PeptideRef; onUse: (vialMg
                 </div>
                 <div className="bg-muted/40 rounded-xl p-3">
                   <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-wider uppercase mb-1">BAC Water</p>
-                  <p className="text-[13px] font-semibold">{peptide.bacWaterMl} mL</p>
+                  <p className="text-[13px] font-semibold">
+                    {peptide.bacByVialMg
+                      ? Array.from(new Set(Object.values(peptide.bacByVialMg))).sort((a, b) => a - b).join(" / ") + " mL"
+                      : `${peptide.bacWaterMl} mL`}
+                  </p>
                 </div>
                 <div className="bg-muted/40 rounded-xl p-3">
                   <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-wider uppercase mb-1">Concentration</p>
@@ -228,18 +232,21 @@ function ReferenceCard({ peptide, onUse }: { peptide: PeptideRef; onUse: (vialMg
                   Load as preset
                 </p>
                 <div className={`grid gap-2 ${sizes.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
-                  {sizes.map((mg) => (
-                    <motion.button
-                      key={mg}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => onUse(mg)}
-                      data-testid={`use-ref-${peptide.name}-${mg}mg`}
-                      className="flex items-center justify-center gap-1.5 bg-primary/12 hover:bg-primary/18 text-primary font-semibold text-[13px] py-3 rounded-xl transition-colors"
-                    >
-                      <ArrowUpRight size={14} strokeWidth={2.2} />
-                      {mg} mg · {peptide.bacWaterMl} mL
-                    </motion.button>
-                  ))}
+                  {sizes.map((mg) => {
+                    const bac = peptide.bacByVialMg?.[mg] ?? peptide.bacWaterMl;
+                    return (
+                      <motion.button
+                        key={mg}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => onUse(mg)}
+                        data-testid={`use-ref-${peptide.name}-${mg}mg`}
+                        className="flex items-center justify-center gap-1.5 bg-primary/12 hover:bg-primary/18 text-primary font-semibold text-[13px] py-3 rounded-xl transition-colors"
+                      >
+                        <ArrowUpRight size={14} strokeWidth={2.2} />
+                        {mg} mg · {bac} mL
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -274,8 +281,9 @@ export function Calculator() {
   };
 
   const prefill = (peptide: PeptideRef, vialMg: number) => {
+    const bac = peptide.bacByVialMg?.[vialMg] ?? peptide.bacWaterMl;
     setValue("vialMg", String(vialMg), { shouldValidate: false });
-    setValue("bacMl", String(peptide.bacWaterMl), { shouldValidate: false });
+    setValue("bacMl", String(bac), { shouldValidate: false });
     setResult(null);
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
