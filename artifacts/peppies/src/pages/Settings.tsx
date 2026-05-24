@@ -1,5 +1,6 @@
-import { motion } from "framer-motion";
-import { User, Bell, Scale, Moon, Info, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Bell, Scale, Moon, Info, ChevronRight, Trash2, AlertTriangle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 const containerVariants = {
@@ -10,6 +11,12 @@ const rowVariants = {
   hidden: { opacity: 0, x: -6 },
   show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 300, damping: 28 } },
 };
+
+const ALL_STORAGE_KEYS = [
+  "peppies_injections",
+  "peppies_calculations",
+  "peppies_disclaimer_v1",
+];
 
 function SectionLabel({ label }: { label: string }) {
   return (
@@ -26,6 +33,8 @@ function Row({
   right,
   testId,
   teal,
+  destructive,
+  onClick,
 }: {
   icon: typeof User;
   label: string;
@@ -33,18 +42,25 @@ function Row({
   right?: React.ReactNode;
   testId: string;
   teal?: boolean;
+  destructive?: boolean;
+  onClick?: () => void;
 }) {
   return (
     <motion.div
       variants={rowVariants}
+      onClick={onClick}
       className="bg-card rounded-2xl px-4 py-3.5 border border-border/60 flex items-center gap-3.5 active:scale-[0.985] transition-transform cursor-pointer"
       data-testid={testId}
     >
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${teal ? "bg-primary/12 text-primary" : "bg-muted text-foreground/70"}`}>
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+        destructive ? "bg-destructive/10 text-destructive" :
+        teal ? "bg-primary/12 text-primary" :
+        "bg-muted text-foreground/70"
+      }`}>
         <Icon size={17} strokeWidth={1.8} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-medium leading-tight">{label}</p>
+        <p className={`text-[14px] font-medium leading-tight ${destructive ? "text-destructive" : ""}`}>{label}</p>
         {sublabel && <p className="text-[12px] text-muted-foreground/70 mt-0.5">{sublabel}</p>}
       </div>
       <div className="flex-shrink-0">
@@ -54,75 +70,174 @@ function Row({
   );
 }
 
-export function Settings() {
+function ResetConfirmSheet({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
   return (
-    <div className="flex flex-col px-5 pt-14 pb-4">
-      <header className="mb-8">
-        <p className="text-[13px] font-medium text-muted-foreground/80 tracking-wide uppercase mb-1">
-          Preferences
-        </p>
-        <h1 className="text-[28px] font-bold tracking-[-0.03em] leading-none">
-          Settings
-        </h1>
-      </header>
-
-      <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col">
-        <SectionLabel label="Account" />
-        <div className="flex flex-col gap-2 mb-2">
-          <Row
-            icon={User}
-            label="Profile"
-            sublabel="Manage your information"
-            teal
-            testId="settings-profile"
-          />
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm px-4 pb-6"
+      onClick={onCancel}
+    >
+      <motion.div
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 60, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 320, damping: 30 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[430px] bg-card border border-border/60 rounded-3xl p-6 flex flex-col gap-5"
+      >
+        <div className="flex flex-col items-center text-center gap-3">
+          <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center text-destructive">
+            <AlertTriangle size={26} strokeWidth={1.8} />
+          </div>
+          <div>
+            <h2 className="text-[17px] font-bold mb-1.5">Reset all app data?</h2>
+            <p className="text-[13px] text-muted-foreground leading-relaxed">
+              This will permanently delete all your logged injections and saved calculations. The disclaimer will also be reset. This cannot be undone.
+            </p>
+          </div>
         </div>
 
-        <SectionLabel label="Preferences" />
-        <div className="flex flex-col gap-2 mb-2">
-          <Row
-            icon={Bell}
-            label="Notifications"
-            sublabel="Reminders and alerts"
-            testId="settings-notifications"
-            right={<Switch checked={true} className="scale-90" />}
-          />
-          <Row
-            icon={Scale}
-            label="Units"
-            sublabel="Weight and measurement"
-            testId="settings-units"
-            right={
-              <div className="flex items-center gap-1.5">
-                <span className="text-[12px] text-muted-foreground font-medium">kg</span>
-                <ChevronRight size={16} className="text-muted-foreground/50" strokeWidth={2} />
-              </div>
-            }
-          />
-          <Row
-            icon={Moon}
-            label="Theme"
-            sublabel="Appearance"
-            testId="settings-theme"
-            right={
-              <div className="flex items-center gap-1.5">
-                <span className="text-[12px] text-muted-foreground font-medium">Dark</span>
-                <ChevronRight size={16} className="text-muted-foreground/50" strokeWidth={2} />
-              </div>
-            }
-          />
-        </div>
-
-        <SectionLabel label="Support" />
-        <div className="flex flex-col gap-2">
-          <Row
-            icon={Info}
-            label="About Peppies"
-            sublabel="Version 1.0.0"
-            testId="settings-about"
-          />
+        <div className="flex flex-col gap-2.5">
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={onConfirm}
+            data-testid="button-confirm-reset"
+            className="w-full bg-destructive text-destructive-foreground font-semibold text-[15px] py-4 rounded-2xl tracking-wide"
+          >
+            Delete Everything
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={onCancel}
+            data-testid="button-cancel-reset"
+            className="w-full bg-muted text-foreground font-semibold text-[15px] py-4 rounded-2xl tracking-wide"
+          >
+            Cancel
+          </motion.button>
         </div>
       </motion.div>
-    </div>
+    </motion.div>
+  );
+}
+
+export function Settings() {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [resetDone, setResetDone] = useState(false);
+
+  const handleReset = () => {
+    ALL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+    setShowConfirm(false);
+    setResetDone(true);
+    setTimeout(() => window.location.reload(), 800);
+  };
+
+  return (
+    <>
+      <div className="flex flex-col px-5 pt-14 pb-4">
+        <header className="mb-8">
+          <p className="text-[13px] font-medium text-muted-foreground/80 tracking-wide uppercase mb-1">
+            Preferences
+          </p>
+          <h1 className="text-[28px] font-bold tracking-[-0.03em] leading-none">
+            Settings
+          </h1>
+        </header>
+
+        <motion.div variants={containerVariants} initial="hidden" animate="show" className="flex flex-col">
+          <SectionLabel label="Account" />
+          <div className="flex flex-col gap-2 mb-2">
+            <Row
+              icon={User}
+              label="Profile"
+              sublabel="Manage your information"
+              teal
+              testId="settings-profile"
+            />
+          </div>
+
+          <SectionLabel label="Preferences" />
+          <div className="flex flex-col gap-2 mb-2">
+            <Row
+              icon={Bell}
+              label="Notifications"
+              sublabel="Reminders and alerts"
+              testId="settings-notifications"
+              right={<Switch checked={true} className="scale-90" />}
+            />
+            <Row
+              icon={Scale}
+              label="Units"
+              sublabel="Weight and measurement"
+              testId="settings-units"
+              right={
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[12px] text-muted-foreground font-medium">kg</span>
+                  <ChevronRight size={16} className="text-muted-foreground/50" strokeWidth={2} />
+                </div>
+              }
+            />
+            <Row
+              icon={Moon}
+              label="Theme"
+              sublabel="Appearance"
+              testId="settings-theme"
+              right={
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[12px] text-muted-foreground font-medium">Dark</span>
+                  <ChevronRight size={16} className="text-muted-foreground/50" strokeWidth={2} />
+                </div>
+              }
+            />
+          </div>
+
+          <SectionLabel label="Support" />
+          <div className="flex flex-col gap-2 mb-2">
+            <Row
+              icon={Info}
+              label="About Peppies"
+              sublabel="Version 1.0.0"
+              testId="settings-about"
+            />
+          </div>
+
+          <SectionLabel label="Data" />
+          <div className="flex flex-col gap-2">
+            <Row
+              icon={Trash2}
+              label="Reset App Data"
+              sublabel="Clear all injections and calculations"
+              destructive
+              testId="settings-reset"
+              onClick={() => setShowConfirm(true)}
+              right={<span />}
+            />
+          </div>
+        </motion.div>
+
+        <AnimatePresence>
+          {resetDone && (
+            <motion.p
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="text-center text-[13px] text-muted-foreground mt-6"
+            >
+              All data cleared. Restarting...
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <AnimatePresence>
+        {showConfirm && (
+          <ResetConfirmSheet
+            onConfirm={handleReset}
+            onCancel={() => setShowConfirm(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
