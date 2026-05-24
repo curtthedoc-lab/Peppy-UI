@@ -318,8 +318,8 @@ function Hotspot({
           animate={state === "selected" ? { scale: [1, 1.2, 1] } : { scale: 1 }}
           transition={{ duration: 0.35 }}
           style={{
-            width: 20, height: 20, borderRadius: "50%",
-            border: `2px solid ${c.ring}`,
+            width: 16, height: 16, borderRadius: "50%",
+            border: "1.75px solid " + c.ring,
             display: "flex", alignItems: "center", justifyContent: "center",
             boxShadow: c.glow ?? "none",
             background: state === "selected"
@@ -331,7 +331,7 @@ function Hotspot({
         >
           <div
             style={{
-              width: 9, height: 9, borderRadius: "50%",
+              width: 7, height: 7, borderRadius: "50%",
               background: c.dot,
             }}
           />
