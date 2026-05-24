@@ -6,6 +6,16 @@ const BACKUP_KEYS = [
   "peppies_hydration",
 ] as const;
 
+type BackupKey = (typeof BACKUP_KEYS)[number];
+
+const KEY_SHAPES: Record<BackupKey, "array" | "object"> = {
+  peppies_injections: "array",
+  peppies_calculations: "array",
+  peppies_cycles: "array",
+  peppies_weight: "array",
+  peppies_hydration: "object",
+};
+
 const SCHEMA_VERSION = 1;
 const APP = "peppies";
 
@@ -14,6 +24,10 @@ export interface BackupFile {
   schemaVersion: number;
   exportedAt: string;
   data: Record<string, unknown>;
+}
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
 }
 
 export function exportBackupAsJson(): { entryCount: number } {
@@ -68,7 +82,7 @@ export async function parseBackupFile(file: File): Promise<BackupFile> {
     typeof parsed !== "object" ||
     (parsed as BackupFile).app !== APP ||
     typeof (parsed as BackupFile).schemaVersion !== "number" ||
-    typeof (parsed as BackupFile).data !== "object"
+    !isPlainObject((parsed as BackupFile).data)
   ) {
     throw new Error("This doesn't look like a Peppies backup file.");
   }
@@ -77,18 +91,35 @@ export async function parseBackupFile(file: File): Promise<BackupFile> {
       "Backup was created with a newer version of Peppies than this device supports.",
     );
   }
-  return parsed as BackupFile;
+
+  const backup = parsed as BackupFile;
+  for (const key of BACKUP_KEYS) {
+    if (!(key in backup.data)) continue;
+    const value = backup.data[key];
+    const expected = KEY_SHAPES[key];
+    const ok = expected === "array" ? Array.isArray(value) : isPlainObject(value);
+    if (!ok) {
+      throw new Error(
+        `Backup is corrupt — "${key}" has an unexpected format. Restore aborted.`,
+      );
+    }
+  }
+
+  return backup;
 }
 
 export function applyBackup(backup: BackupFile): { restored: string[] } {
+  // Atomic replace: clear every managed key first so missing keys in the
+  // backup don't leave stale local data behind.
+  for (const key of BACKUP_KEYS) {
+    localStorage.removeItem(key);
+  }
+
   const restored: string[] = [];
   for (const key of BACKUP_KEYS) {
     const value = backup.data[key];
     if (value === undefined) continue;
-    localStorage.setItem(
-      key,
-      typeof value === "string" ? value : JSON.stringify(value),
-    );
+    localStorage.setItem(key, JSON.stringify(value));
     restored.push(key);
   }
   return { restored };

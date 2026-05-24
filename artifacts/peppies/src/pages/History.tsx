@@ -21,7 +21,17 @@ function formatTime(iso: string) {
 }
 
 function peptideInitials(name: string) {
-  return name.split(/[-\s]/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  const cleaned = name.replace(/\([^)]*\)/g, " ");
+  const tokens = cleaned
+    .split(/[-\s+/]+/)
+    .map((t) => t.replace(/[^A-Za-z]/g, ""))
+    .filter((t) => t.length > 0);
+  if (tokens.length === 0) {
+    const letters = name.replace(/[^A-Za-z]/g, "");
+    return (letters.slice(0, 2) || "?").toUpperCase();
+  }
+  if (tokens.length === 1) return tokens[0].slice(0, 2).toUpperCase();
+  return (tokens[0][0] + tokens[1][0]).toUpperCase();
 }
 
 function NotesEditor({
@@ -135,7 +145,7 @@ function InjectionRow({
 
         <div className="flex-1 min-w-0">
           <p className="text-[14px] font-semibold truncate">{injection.peptide}</p>
-          <p className="text-[12px] text-muted-foreground mt-0.5">
+          <p className="text-[12px] text-muted-foreground mt-0.5 truncate">
             {injection.dose} {injection.units} · {injection.site}
           </p>
         </div>
