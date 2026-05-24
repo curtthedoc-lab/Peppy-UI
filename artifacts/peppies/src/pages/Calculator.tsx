@@ -144,8 +144,16 @@ function HistoryRow({ calc }: { calc: Calculation }) {
   );
 }
 
-function ReferenceCard({ peptide, onUse }: { peptide: PeptideRef; onUse: () => void }) {
+function parseVialSizes(input: string, fallback: number): number[] {
+  const matches = Array.from(input.matchAll(/(\d+(?:\.\d+)?)\s*mg(?!\s*\/)/gi));
+  const nums = matches.map((m) => Number(m[1])).filter((n) => n > 0);
+  const unique = Array.from(new Set(nums)).sort((a, b) => a - b);
+  return unique.length > 0 ? unique : [fallback];
+}
+
+function ReferenceCard({ peptide, onUse }: { peptide: PeptideRef; onUse: (vialMg: number) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const sizes = parseVialSizes(peptide.vialSizes, peptide.vialMg);
 
   return (
     <div className="border-t border-border/40 first:border-t-0" data-testid={`ref-card-${peptide.name}`}>
@@ -211,15 +219,25 @@ function ReferenceCard({ peptide, onUse }: { peptide: PeptideRef; onUse: () => v
               <div className="flex items-center justify-between px-1">
                 <p className="text-[10px] text-muted-foreground/40">Source: {peptide.source}</p>
               </div>
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={onUse}
-                data-testid={`use-ref-${peptide.name}`}
-                className="flex items-center justify-center gap-2 w-full bg-primary/12 hover:bg-primary/18 text-primary font-semibold text-[13px] py-3 rounded-xl transition-colors"
-              >
-                <ArrowUpRight size={15} strokeWidth={2.2} />
-                Use {peptide.vialMg} mg · {peptide.bacWaterMl} mL in Calculator
-              </motion.button>
+              <div className="flex flex-col gap-1.5">
+                <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-wider uppercase px-1">
+                  Load as preset
+                </p>
+                <div className={`grid gap-2 ${sizes.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+                  {sizes.map((mg) => (
+                    <motion.button
+                      key={mg}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => onUse(mg)}
+                      data-testid={`use-ref-${peptide.name}-${mg}mg`}
+                      className="flex items-center justify-center gap-1.5 bg-primary/12 hover:bg-primary/18 text-primary font-semibold text-[13px] py-3 rounded-xl transition-colors"
+                    >
+                      <ArrowUpRight size={14} strokeWidth={2.2} />
+                      {mg} mg · {peptide.bacWaterMl} mL
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
@@ -251,8 +269,8 @@ export function Calculator() {
     addCalculation(calc);
   };
 
-  const prefill = (peptide: PeptideRef) => {
-    setValue("vialMg", String(peptide.vialMg), { shouldValidate: false });
+  const prefill = (peptide: PeptideRef, vialMg: number) => {
+    setValue("vialMg", String(vialMg), { shouldValidate: false });
     setValue("bacMl", String(peptide.bacWaterMl), { shouldValidate: false });
     setResult(null);
     formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -366,7 +384,7 @@ export function Calculator() {
             <ReferenceCard
               key={peptide.name}
               peptide={peptide}
-              onUse={() => prefill(peptide)}
+              onUse={(mg) => prefill(peptide, mg)}
             />
           ))}
         </div>
