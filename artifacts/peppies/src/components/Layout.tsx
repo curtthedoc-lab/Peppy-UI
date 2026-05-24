@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { Home, PenLine, Calculator, Apple, Clock, Settings } from "lucide-react";
 import { ReactNode } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const navItems = [
   { href: "/", icon: Home, label: "Home" },
@@ -21,18 +21,15 @@ export function Layout({ children }: { children: ReactNode }) {
         className="flex-1 overflow-y-auto scrollbar-none relative"
         style={{ paddingBottom: "calc(72px + env(safe-area-inset-bottom, 12px))" }}
       >
-        <AnimatePresence mode="wait">
-          <motion.main
-            key={location}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="min-h-full"
-          >
-            {children}
-          </motion.main>
-        </AnimatePresence>
+        <motion.main
+          key={location}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.14, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="min-h-full"
+        >
+          {children}
+        </motion.main>
       </div>
 
       <nav
