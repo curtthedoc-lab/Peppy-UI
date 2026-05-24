@@ -23,11 +23,14 @@ const PEPTIDES = [
 const UNITS = ["mcg", "mg", "IU", "units"];
 
 const SITES = [
-  "Abdomen",
+  "Left Abdomen",
+  "Right Abdomen",
+  "Left Flank",
+  "Right Flank",
   "Left Thigh",
   "Right Thigh",
-  "Left Deltoid",
-  "Right Deltoid",
+  "Left Arm (Bicep)",
+  "Right Arm (Bicep)",
   "Left Glute",
   "Right Glute",
 ];
