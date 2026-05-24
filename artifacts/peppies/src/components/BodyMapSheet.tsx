@@ -209,91 +209,97 @@ function AnatomySVG() {
       {/* Centre line — subtle sternum/nasal indicator */}
       <line x1="100" y1="56" x2="100" y2="76" stroke={S} strokeWidth="0.8" opacity="0.35" />
 
-      {/* ── Muscle zone highlights ── */}
+      {/* ── Muscle zone highlights — aligned to new anatomy ── */}
 
-      {/* Left pectoral */}
+      {/* Right pectoral (viewer-left, patient's right chest) */}
       <path
-        d="M 48 92 C 44 97,42 110,46 124 C 50 136,62 144,76 142
-           C 84 140,88 132,86 120 C 84 108,74 94,62 90 Z"
+        d="M 50 108 C 46 116,46 130,50 142 C 56 152,68 154,80 150
+           C 90 146,94 138,92 126 C 90 116,82 108,72 106
+           C 64 105,56 105,50 108 Z"
         fill={MF} stroke={MS} strokeWidth="1"
       />
-      {/* Right pectoral */}
+      {/* Left pectoral (viewer-right, patient's left chest) */}
       <path
-        d="M 152 92 C 156 97,158 110,154 124 C 150 136,138 144,124 142
-           C 116 140,112 132,114 120 C 116 108,126 94,138 90 Z"
-        fill={MF} stroke={MS} strokeWidth="1"
-      />
-
-      {/* Left deltoid muscle */}
-      <path
-        d="M 42 90 C 36 94,34 102,36 114 C 38 122,46 128,54 124
-           C 60 120,62 112,60 104 C 58 96,50 88,44 88 Z"
-        fill={MF} stroke={MS} strokeWidth="1"
-      />
-      {/* Right deltoid muscle */}
-      <path
-        d="M 158 90 C 164 94,166 102,164 114 C 162 122,154 128,146 124
-           C 140 120,138 112,140 104 C 142 96,150 88,156 88 Z"
+        d="M 150 108 C 154 116,154 130,150 142 C 144 152,132 154,120 150
+           C 110 146,106 138,108 126 C 110 116,118 108,128 106
+           C 136 105,144 105,150 108 Z"
         fill={MF} stroke={MS} strokeWidth="1"
       />
 
-      {/* Left outer arm (tricep) */}
+      {/* Right deltoid (viewer-left) */}
       <path
-        d="M 30 120 C 24 128,22 146,24 164 C 24 172,28 176,34 174
-           C 40 172,44 164,44 150 C 44 134,40 120,34 118 Z"
+        d="M 46 104 C 38 110,32 122,30 136 C 30 146,36 150,44 148
+           C 50 146,54 140,54 130 C 54 118,52 108,48 104 Z"
         fill={MF} stroke={MS} strokeWidth="1"
       />
-      {/* Right outer arm */}
+      {/* Left deltoid (viewer-right) */}
       <path
-        d="M 170 120 C 176 128,178 146,176 164 C 176 172,172 176,166 174
-           C 160 172,156 164,156 150 C 156 134,160 120,166 118 Z"
+        d="M 154 104 C 162 110,168 122,170 136 C 170 146,164 150,156 148
+           C 150 146,146 140,146 130 C 146 118,148 108,152 104 Z"
         fill={MF} stroke={MS} strokeWidth="1"
       />
 
-      {/* Rectus abdominis */}
+      {/* Right outer arm / tricep (viewer-left) */}
       <path
-        d="M 70 152 C 68 154,68 158,68 162 L 68 248
-           C 68 252,70 254,74 254 L 126 254
-           C 130 254,132 252,132 248 L 132 162
-           C 132 158,132 154,130 152 Z"
+        d="M 32 144 C 28 154,26 172,28 192 C 30 204,34 210,40 208
+           C 46 206,50 198,50 184 C 50 168,46 152,42 144 Z"
+        fill={MF} stroke={MS} strokeWidth="1"
+      />
+      {/* Left outer arm / tricep (viewer-right) */}
+      <path
+        d="M 168 144 C 172 154,174 172,172 192 C 170 204,166 210,160 208
+           C 154 206,150 198,150 184 C 150 168,154 152,158 144 Z"
+        fill={MF} stroke={MS} strokeWidth="1"
+      />
+
+      {/* Rectus abdominis — follows new tapered torso */}
+      <path
+        d="M 74 148
+           C 72 150,72 154,72 158
+           L 70 252
+           C 70 258,74 262,80 262
+           L 120 262
+           C 126 262,130 258,130 252
+           L 128 158
+           C 128 154,128 150,126 148 Z"
         fill={MF} stroke={MS} strokeWidth="1"
       />
       {/* Abs horizontal dividers */}
-      <line x1="68" y1="178" x2="132" y2="178" stroke={AD} strokeWidth="0.9" />
-      <line x1="68" y1="204" x2="132" y2="204" stroke={AD} strokeWidth="0.9" />
-      <line x1="68" y1="230" x2="132" y2="230" stroke={AD} strokeWidth="0.9" />
-      {/* Abs vertical midline */}
-      <line x1="100" y1="152" x2="100" y2="254" stroke={AD} strokeWidth="0.9" />
+      <line x1="72" y1="178" x2="128" y2="178" stroke={AD} strokeWidth="0.9" />
+      <line x1="71" y1="206" x2="129" y2="206" stroke={AD} strokeWidth="0.9" />
+      <line x1="70" y1="234" x2="130" y2="234" stroke={AD} strokeWidth="0.9" />
+      {/* Abs vertical midline (linea alba) */}
+      <line x1="100" y1="148" x2="100" y2="262" stroke={AD} strokeWidth="0.9" />
 
-      {/* Left oblique */}
+      {/* Right oblique (viewer-left flank) */}
       <path
-        d="M 48 160 C 44 166,44 180,48 196 C 52 210,60 218,66 216
-           C 72 214,74 204,72 188 C 70 172,62 156,54 154 Z"
+        d="M 52 158 C 48 168,48 184,52 200 C 56 216,64 224,70 222
+           C 76 220,78 208,76 192 C 74 174,66 156,58 154 Z"
         fill={MF} stroke={MS} strokeWidth="1"
       />
-      {/* Right oblique */}
+      {/* Left oblique (viewer-right flank) */}
       <path
-        d="M 152 160 C 156 166,156 180,152 196 C 148 210,140 218,134 216
-           C 128 214,126 204,128 188 C 130 172,138 156,146 154 Z"
-        fill={MF} stroke={MS} strokeWidth="1"
-      />
-
-      {/* Left quadricep */}
-      <path
-        d="M 50 258 C 44 272,40 296,42 320 C 44 340,54 352,64 348
-           C 72 344,74 330,72 310 C 70 290,64 266,56 258 Z"
-        fill={MF} stroke={MS} strokeWidth="1"
-      />
-      {/* Right quadricep */}
-      <path
-        d="M 150 258 C 156 272,160 296,158 320 C 156 340,146 352,136 348
-           C 128 344,126 330,128 310 C 130 290,136 266,144 258 Z"
+        d="M 148 158 C 152 168,152 184,148 200 C 144 216,136 224,130 222
+           C 124 220,122 208,124 192 C 126 174,134 156,142 154 Z"
         fill={MF} stroke={MS} strokeWidth="1"
       />
 
-      {/* Clavicle lines */}
-      <path d="M 88 84 Q 74 92,62 90" stroke={S} strokeWidth="0.9" fill="none" opacity="0.4" strokeLinecap="round" />
-      <path d="M 112 84 Q 126 92,138 90" stroke={S} strokeWidth="0.9" fill="none" opacity="0.4" strokeLinecap="round" />
+      {/* Right quadricep (viewer-left thigh) */}
+      <path
+        d="M 74 282 C 68 298,66 320,68 342 C 70 354,76 358,82 356
+           C 90 354,94 342,94 320 C 94 302,90 286,86 280 Z"
+        fill={MF} stroke={MS} strokeWidth="1"
+      />
+      {/* Left quadricep (viewer-right thigh) */}
+      <path
+        d="M 126 282 C 132 298,134 320,132 342 C 130 354,124 358,118 356
+           C 110 354,106 342,106 320 C 106 302,110 286,114 280 Z"
+        fill={MF} stroke={MS} strokeWidth="1"
+      />
+
+      {/* Clavicle hint lines */}
+      <path d="M 90 100 Q 76 106,62 108" stroke={S} strokeWidth="0.9" fill="none" opacity="0.4" strokeLinecap="round" />
+      <path d="M 110 100 Q 124 106,138 108" stroke={S} strokeWidth="0.9" fill="none" opacity="0.4" strokeLinecap="round" />
     </svg>
   );
 }
