@@ -491,6 +491,7 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
           boxShadow: "0 -16px 60px hsl(220 20% 3% / 0.7)",
           display: "flex",
           flexDirection: "column",
+          paddingBottom: "calc(84px + env(safe-area-inset-bottom, 0px))",
         }}
       >
         {/* Handle */}
@@ -650,7 +651,6 @@ export function BodyMapSheet({ selected, onSelect, onClose }: BodyMapSheetProps)
           </div>
         )}
 
-        <div className="flex-shrink-0" style={{ height: "env(safe-area-inset-bottom, 10px)" }} />
       </motion.div>
     </div>
   );
