@@ -36,7 +36,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </div>
 
       <nav
-        className="absolute bottom-0 w-full bg-card/90 backdrop-blur-2xl border-t border-border/60 flex items-center justify-around px-1 z-50"
+        className="absolute bottom-0 w-full bg-card/90 backdrop-blur-2xl border-t border-border/60 flex items-center justify-around px-1 z-40"
         style={{
           height: "calc(72px + env(safe-area-inset-bottom, 12px))",
           paddingBottom: "env(safe-area-inset-bottom, 12px)",
