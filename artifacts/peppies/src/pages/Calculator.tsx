@@ -214,7 +214,10 @@ function ReferenceCard({ peptide, onUse }: { peptide: PeptideRef; onUse: (vialMg
                 <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-wider uppercase mb-1">Dose Range</p>
                 <p className="text-[13px] font-semibold leading-snug">{peptide.doseRange}</p>
               </div>
-              <div className="bg-muted/20 rounded-xl p-3">
+              <div className="bg-muted/20 rounded-xl p-3 flex flex-col gap-2">
+                <p className="text-[12px] text-primary/90 leading-relaxed">
+                  <span className="font-semibold">U-100 syringe:</span> 1 unit {peptide.perUnit.replace(/\s*per unit.*/i, "").trim()}.
+                </p>
                 <p className="text-[12px] text-muted-foreground/70 leading-relaxed">{peptide.notes}</p>
               </div>
               <div className="flex items-center justify-between px-1">
