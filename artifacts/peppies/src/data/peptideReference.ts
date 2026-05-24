@@ -54,9 +54,9 @@ export const PEPTIDE_REFERENCE: PeptideRef[] = [
     doseRange: "2.5–15 mg/week (2,500–15,000 mcg); start at 2.5 mg/week and titrate",
     bacWaterMl: 2,
     vialMg: 5,
-    concentration: "2.5 mg/mL",
-    perUnit: "≈ 25 mcg per unit",
-    notes: "Subcutaneous, once weekly. Start at 2.5 mg/week; increase by 2.5 mg every 4 weeks as tolerated. For 40 mg vials use 2 mL BAC water (20 mg/mL). Inject abdomen, thigh, or upper arm.",
+    concentration: "2.5 / 5 / 7.5 / 20 mg/mL (by vial size — all reconstituted with 2 mL BAC water)",
+    perUnit: "≈ 25 / 50 / 75 / 200 mcg per unit (5 / 10 / 15 / 40 mg vials)",
+    notes: "Subcutaneous, once weekly. Reconstitute every vial size with 2 mL BAC water — concentration scales with vial strength (5 mg → 2.5 mg/mL, 10 mg → 5 mg/mL, 15 mg → 7.5 mg/mL, 40 mg → 20 mg/mL). Start at 2.5 mg/week; increase by 2.5 mg every 4 weeks as tolerated. Inject abdomen, thigh, or upper arm.",
     source: "peptidedosages.com",
   },
   {
