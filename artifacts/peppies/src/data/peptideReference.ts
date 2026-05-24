@@ -211,13 +211,13 @@ export const PEPTIDE_REFERENCE: PeptideRef[] = [
   },
   {
     name: "L-Carnitine",
-    vialSizes: "500 mg/mL (multi-mL vial, typically 5–10 mL)",
+    vialSizes: "600 mg, 1000 mg (pre-mixed 500 mg/mL solution)",
     doseRange: "500–1,000 mg/day (subcutaneous or intramuscular)",
     bacWaterMl: 0,
-    vialMg: 500,
+    vialMg: 600,
     concentration: "500 mg/mL (pre-mixed)",
     perUnit: "= 5 mg per unit",
-    notes: "Pre-mixed solution — no reconstitution required. Subcutaneous or IM, typically pre-cardio. Supports fatty acid oxidation. Refrigerate after opening; use within 30 days.",
+    notes: "Pre-mixed solution — no reconstitution required (leave BAC water at 0). Subcutaneous or IM, typically pre-cardio. Supports fatty acid oxidation. Refrigerate after opening; use within 30 days.",
     source: "peptidedosages.com",
   },
   {
