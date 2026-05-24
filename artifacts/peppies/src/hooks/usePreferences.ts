@@ -4,10 +4,11 @@ export type WeightUnit = "kg" | "lbs";
 
 export interface Preferences {
   weightUnit: WeightUnit;
+  cycleReminders: boolean;
 }
 
 const STORAGE_KEY = "peppies_preferences";
-const DEFAULTS: Preferences = { weightUnit: "kg" };
+const DEFAULTS: Preferences = { weightUnit: "kg", cycleReminders: false };
 const EVENT = "peppies_preferences_changed";
 
 function load(): Preferences {
@@ -17,6 +18,7 @@ function load(): Preferences {
     const parsed = JSON.parse(raw) as Partial<Preferences>;
     return {
       weightUnit: parsed.weightUnit === "lbs" ? "lbs" : "kg",
+      cycleReminders: parsed.cycleReminders === true,
     };
   } catch {
     return DEFAULTS;
@@ -49,6 +51,14 @@ export function usePreferences() {
     });
   }, []);
 
+  const setCycleReminders = useCallback((enabled: boolean) => {
+    setPrefs((prev) => {
+      const next = { ...prev, cycleReminders: enabled };
+      save(next);
+      return next;
+    });
+  }, []);
+
   const toggleWeightUnit = useCallback(() => {
     setPrefs((prev) => {
       const next: Preferences = {
@@ -60,5 +70,5 @@ export function usePreferences() {
     });
   }, []);
 
-  return { prefs, setWeightUnit, toggleWeightUnit };
+  return { prefs, setWeightUnit, toggleWeightUnit, setCycleReminders };
 }

@@ -7,6 +7,7 @@ import { exportInjectionsAsCsv } from "@/utils/exportCsv";
 import { exportBackupAsJson, parseBackupFile, applyBackup, summarizeBackup, BackupFile } from "@/utils/backup";
 import { AboutSheet } from "@/components/AboutSheet";
 import { usePreferences } from "@/hooks/usePreferences";
+import { requestNotificationPermission, notificationSupported, currentNotificationPermission } from "@/hooks/useCycleReminder";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -25,6 +26,7 @@ const ALL_STORAGE_KEYS = [
   "peppies_weight",
   "peppies_hydration",
   "peppies_preferences",
+  "peppies_notifications",
 ];
 
 function SectionLabel({ label }: { label: string }) {
@@ -216,7 +218,35 @@ export function Settings() {
   const [showAbout, setShowAbout] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { injections } = useInjections();
-  const { prefs, toggleWeightUnit } = usePreferences();
+  const { prefs, toggleWeightUnit, setCycleReminders } = usePreferences();
+  const [notifError, setNotifError] = useState<string | null>(null);
+
+  const handleToggleReminders = async () => {
+    setNotifError(null);
+    if (prefs.cycleReminders) {
+      setCycleReminders(false);
+      return;
+    }
+    if (!notificationSupported()) {
+      setNotifError("Your browser doesn't support notifications.");
+      return;
+    }
+    const perm = currentNotificationPermission();
+    if (perm === "denied") {
+      setNotifError("Notifications were blocked. Enable them for this site in your browser settings, then try again.");
+      return;
+    }
+    if (perm === "granted") {
+      setCycleReminders(true);
+      return;
+    }
+    const result = await requestNotificationPermission();
+    if (result === "granted") {
+      setCycleReminders(true);
+    } else {
+      setNotifError("Permission not granted. Reminders stay off.");
+    }
+  };
 
   const handleReset = () => {
     ALL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
@@ -291,11 +321,17 @@ export function Settings() {
           <div className="flex flex-col gap-2 mb-2">
             <Row
               icon={Bell}
-              label="Notifications"
-              sublabel="Reminders and alerts"
+              label="Cycle Reminders"
+              sublabel={prefs.cycleReminders ? "Alert when a cycle ends" : "Off"}
               testId="settings-notifications"
-              right={<Switch checked={true} className="scale-90" />}
+              onClick={handleToggleReminders}
+              right={<Switch checked={prefs.cycleReminders} className="scale-90 pointer-events-none" />}
             />
+            {notifError && (
+              <p className="text-[11.5px] text-destructive/90 px-2 -mt-1 leading-snug" data-testid="text-notif-error">
+                {notifError}
+              </p>
+            )}
             <Row
               icon={Scale}
               label="Weight Units"

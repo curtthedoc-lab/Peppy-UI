@@ -14,6 +14,7 @@ import { History } from "@/pages/History";
 import { Settings } from "@/pages/Settings";
 import { Disclaimer, useDisclaimerAccepted } from "@/components/Disclaimer";
 import NotFound from "@/pages/not-found";
+import { useCycleReminder } from "@/hooks/useCycleReminder";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ function Router() {
 
 function App() {
   const [accepted, setAccepted] = useState(useDisclaimerAccepted);
+  useCycleReminder();
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
