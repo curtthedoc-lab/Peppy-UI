@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ScanBarcode, Minus, Plus, Loader2, Pencil } from "lucide-react";
+import { X, ScanBarcode, Minus, Plus, Loader2, Pencil, Search, Tag } from "lucide-react";
 import { FoodEntry, MealType } from "@/hooks/useNutrition";
 import { BarcodeScanner } from "./BarcodeScanner";
-import { lookupBarcode, FoodLookupResult } from "@/utils/openFoodFacts";
+import { lookupBarcode, searchFoods, FoodLookupResult } from "@/utils/openFoodFacts";
 
 const MEAL_OPTIONS: { value: MealType; label: string }[] = [
   { value: "breakfast", label: "Breakfast" },
@@ -71,18 +71,84 @@ export function AddFoodSheet({
   const [quantity, setQuantity] = useState("1");
   const [lookupError, setLookupError] = useState<string | null>(null);
 
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState<FoodLookupResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const searchTimerRef = useRef<number | null>(null);
+  const searchControllerRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
     setDraft(toDraft(initial, defaultMeal));
   }, [initial, defaultMeal]);
 
+  // Cleanup any pending search on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimerRef.current) window.clearTimeout(searchTimerRef.current);
+      if (searchControllerRef.current) searchControllerRef.current.abort();
+    };
+  }, []);
+
+  const runSearch = (q: string) => {
+    if (searchTimerRef.current) window.clearTimeout(searchTimerRef.current);
+    if (searchControllerRef.current) searchControllerRef.current.abort();
+
+    if (q.trim().length < 2) {
+      setSuggestions([]);
+      setSearching(false);
+      setSearched(false);
+      return;
+    }
+    setSearching(true);
+    searchTimerRef.current = window.setTimeout(async () => {
+      const controller = new AbortController();
+      searchControllerRef.current = controller;
+      try {
+        const results = await searchFoods(q.trim(), controller.signal);
+        if (!controller.signal.aborted) {
+          setSuggestions(results);
+          setSearched(true);
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setSuggestions([]);
+          setSearched(true);
+        }
+      } finally {
+        if (!controller.signal.aborted) setSearching(false);
+      }
+    }, 280);
+  };
+
   const update = (key: keyof Draft, value: string) => {
-    if (key === "name" || key === "serving" || key === "meal") {
+    if (key === "name") {
+      setDraft((d) => ({ ...d, name: value }));
+      // Trigger autocomplete only in add-new mode and before a lookup is applied
+      if (!isEdit && !base) {
+        setShowSuggestions(true);
+        runSearch(value);
+      }
+      return;
+    }
+    if (key === "serving" || key === "meal") {
       setDraft((d) => ({ ...d, [key]: value }));
       return;
     }
     if (value === "" || NUM_RE.test(value)) {
       setDraft((d) => ({ ...d, [key]: value }));
     }
+  };
+
+  const pickSuggestion = (result: FoodLookupResult) => {
+    if (searchTimerRef.current) window.clearTimeout(searchTimerRef.current);
+    if (searchControllerRef.current) searchControllerRef.current.abort();
+    setShowSuggestions(false);
+    setSuggestions([]);
+    setSearched(false);
+    setSearching(false);
+    applyLookup(result);
   };
 
   const handleDetected = async (barcode: string) => {
@@ -254,15 +320,88 @@ export function AddFoodSheet({
           </AnimatePresence>
 
           <Field label="Food name">
-            <input
-              type="text"
-              value={draft.name}
-              onChange={(e) => update("name", e.target.value)}
-              placeholder="e.g. Chicken breast"
-              className="bg-muted/60 rounded-xl px-3.5 py-3 w-full text-[14px] outline-none focus:ring-2 focus:ring-primary/40"
-              data-testid="input-food-name"
-              autoFocus={!initial?.name && !scaled}
-            />
+            <div className="relative">
+              <input
+                type="text"
+                value={draft.name}
+                onChange={(e) => update("name", e.target.value)}
+                onFocus={() => {
+                  if (!isEdit && !base && suggestions.length > 0) setShowSuggestions(true);
+                }}
+                onBlur={() => {
+                  // Delay so a tap on a suggestion still registers
+                  window.setTimeout(() => setShowSuggestions(false), 150);
+                }}
+                placeholder="e.g. Banana, chicken breast, rice…"
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
+                className="bg-muted/60 rounded-xl px-3.5 py-3 w-full text-[14px] outline-none focus:ring-2 focus:ring-primary/40 pr-9"
+                data-testid="input-food-name"
+                autoFocus={!initial?.name && !scaled}
+              />
+              {searching && (
+                <Loader2
+                  size={15}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-muted-foreground/70"
+                />
+              )}
+              {!searching && !isEdit && !base && draft.name.trim().length >= 2 && (
+                <Search
+                  size={14}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50"
+                />
+              )}
+
+              <AnimatePresence>
+                {showSuggestions && !isEdit && !base && draft.name.trim().length >= 2 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute left-0 right-0 top-full mt-1.5 z-10 bg-card border border-border/60 rounded-2xl shadow-xl shadow-black/30 overflow-hidden max-h-[280px] overflow-y-auto"
+                    data-testid="food-suggestions"
+                  >
+                    {suggestions.length === 0 && searched && !searching && (
+                      <p className="text-[12.5px] text-muted-foreground/70 text-center px-4 py-4">
+                        No matches. Keep typing or enter values by hand.
+                      </p>
+                    )}
+                    {suggestions.length === 0 && searching && (
+                      <p className="text-[12.5px] text-muted-foreground/70 text-center px-4 py-4">
+                        Searching…
+                      </p>
+                    )}
+                    {suggestions.map((s, i) => {
+                      const title = s.brand ? `${s.brand} — ${s.name}` : s.name;
+                      return (
+                        <button
+                          key={`${s.source}-${s.barcode ?? i}-${i}`}
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => pickSuggestion(s)}
+                          className="w-full text-left px-3.5 py-2.5 hover:bg-muted/60 active:bg-muted transition-colors flex items-start gap-2.5 border-b border-border/30 last:border-b-0"
+                          data-testid={`food-suggestion-${i}`}
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-primary/15 text-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Tag size={12} strokeWidth={2.4} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[13px] font-semibold leading-tight truncate">
+                              {title}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground/70 mt-0.5 truncate">
+                              {s.serving} · {s.calories} kcal · {s.protein}p {s.carbs}c {s.fat}f
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </Field>
 
           <Field label="Serving">
