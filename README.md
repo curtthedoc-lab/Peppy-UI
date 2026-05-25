@@ -3,7 +3,10 @@
 > A dark-mode, mobile-first PWA for peptide protocols — log injections, calculate doses, and track the daily metrics that go with them. All on your device, all yours.
 
 <p align="center">
-  <img src="docs/screenshots/home.jpg" alt="Peppies onboarding screen" width="320" />
+  <img src="docs/screenshots/home.jpg" alt="Home dashboard" width="220" />
+  <img src="docs/screenshots/log.jpg" alt="Log an injection" width="220" />
+  <img src="docs/screenshots/history.jpg" alt="Injection history" width="220" />
+  <img src="docs/screenshots/settings.jpg" alt="Settings" width="220" />
 </p>
 
 Peppies is a single-page web app that replaces the tangle of notes, spreadsheets, and reminder timers most people use to keep track of a peptide protocol. It's installable as a PWA, works offline after the first load, and stores everything in your browser — no account, no server, no analytics.
