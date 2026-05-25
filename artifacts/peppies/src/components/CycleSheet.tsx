@@ -93,6 +93,72 @@ function CycleForm({ onSubmit, onCancel }: {
   );
 }
 
+function ActiveCycleCard({ cycle, onEnd }: { cycle: Cycle; onEnd: () => void }) {
+  const [confirmEnd, setConfirmEnd] = useState(false);
+  const daysIn = daysSince(cycle.startDate);
+  const progress = cycle.durationDays
+    ? Math.min(daysIn / cycle.durationDays, 1)
+    : null;
+  const daysLeft = cycle.durationDays ? cycle.durationDays - daysIn : null;
+
+  return (
+    <div
+      className="bg-primary/8 border border-primary/20 rounded-2xl p-4 flex flex-col gap-3"
+      data-testid={`active-cycle-${cycle.id}`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[10px] font-semibold text-primary/80 uppercase tracking-widest">Active</span>
+          </div>
+          <p className="text-[15px] font-bold leading-tight truncate">{cycle.name}</p>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-[22px] font-bold text-primary leading-none">{daysIn}</p>
+          <p className="text-[10px] text-muted-foreground/60 font-medium">{daysIn === 1 ? "day in" : "days in"}</p>
+        </div>
+      </div>
+
+      {progress !== null && (
+        <div>
+          <div className="flex justify-between text-[11px] text-muted-foreground/60 mb-1.5">
+            <span>Day {daysIn}</span>
+            <span>{daysLeft !== null && daysLeft > 0 ? `${daysLeft}d left` : cycle.durationDays ? "Complete" : ""}</span>
+          </div>
+          <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progress * 100}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="h-full bg-primary rounded-full"
+            />
+          </div>
+        </div>
+      )}
+
+      {cycle.notes && (
+        <p className="text-[12px] text-muted-foreground/60 italic leading-relaxed">"{cycle.notes}"</p>
+      )}
+
+      <motion.button
+        whileTap={{ scale: 0.97 }}
+        onClick={() => {
+          if (confirmEnd) { onEnd(); setConfirmEnd(false); }
+          else { setConfirmEnd(true); setTimeout(() => setConfirmEnd(false), 2500); }
+        }}
+        className={`w-full flex items-center justify-center gap-1.5 text-[13px] font-semibold py-2.5 rounded-xl transition-colors ${
+          confirmEnd ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"
+        }`}
+        data-testid={`end-cycle-${cycle.id}`}
+      >
+        <CheckCircle2 size={14} strokeWidth={2} />
+        {confirmEnd ? "Confirm End" : "End Protocol"}
+      </motion.button>
+    </div>
+  );
+}
+
 function PastCycleRow({ cycle, onDelete }: { cycle: Cycle; onDelete: () => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const days = daysSince(cycle.startDate);
@@ -123,20 +189,20 @@ function PastCycleRow({ cycle, onDelete }: { cycle: Cycle; onDelete: () => void 
 }
 
 export function CycleSheet({ onClose }: { onClose: () => void }) {
-  const { activeCycle, pastCycles, startCycle, endCycle, deleteCycle } = useCycles();
-  const [showForm, setShowForm] = useState(!activeCycle);
-  const [confirmEnd, setConfirmEnd] = useState(false);
-
-  const daysIn = activeCycle ? daysSince(activeCycle.startDate) : 0;
-  const progress = activeCycle?.durationDays
-    ? Math.min(daysIn / activeCycle.durationDays, 1)
-    : null;
-  const daysLeft = activeCycle?.durationDays ? activeCycle.durationDays - daysIn : null;
+  const { activeCycles, pastCycles, startCycle, endCycle, deleteCycle } = useCycles();
+  const [showForm, setShowForm] = useState(activeCycles.length === 0);
 
   const handleStart = (data: { name: string; durationDays?: number; notes?: string }) => {
     startCycle({ ...data, startDate: new Date().toISOString() });
     setShowForm(false);
   };
+
+  const activeLabel =
+    activeCycles.length === 0
+      ? "Protocols"
+      : activeCycles.length === 1
+      ? "1 active protocol"
+      : `${activeCycles.length} active protocols`;
 
   return (
     <motion.div
@@ -156,7 +222,12 @@ export function CycleSheet({ onClose }: { onClose: () => void }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-[17px] font-bold">Protocols</h2>
+          <div className="min-w-0">
+            <h2 className="text-[17px] font-bold leading-tight">Protocols</h2>
+            {activeCycles.length > 0 && !showForm && (
+              <p className="text-[11px] text-muted-foreground/60 mt-0.5">{activeLabel}</p>
+            )}
+          </div>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
             <X size={15} strokeWidth={2.5} />
           </button>
@@ -167,88 +238,38 @@ export function CycleSheet({ onClose }: { onClose: () => void }) {
             <motion.div key="form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
               <CycleForm
                 onSubmit={handleStart}
-                onCancel={() => setShowForm(false)}
+                onCancel={() => {
+                  if (activeCycles.length > 0) setShowForm(false);
+                  else onClose();
+                }}
               />
             </motion.div>
           ) : (
-            <motion.div key="main" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col gap-5">
+            <motion.div key="main" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col gap-4">
 
-              {/* Active cycle */}
-              {activeCycle && (
-                <div className="bg-primary/8 border border-primary/20 rounded-2xl p-4 flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 mb-0.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                        <span className="text-[10px] font-semibold text-primary/80 uppercase tracking-widest">Active</span>
-                      </div>
-                      <p className="text-[15px] font-bold leading-tight truncate">{activeCycle.name}</p>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-[22px] font-bold text-primary leading-none">{daysIn}</p>
-                      <p className="text-[10px] text-muted-foreground/60 font-medium">{daysIn === 1 ? "day in" : "days in"}</p>
-                    </div>
-                  </div>
+              {/* All active cycles */}
+              {activeCycles.map((c) => (
+                <ActiveCycleCard
+                  key={c.id}
+                  cycle={c}
+                  onEnd={() => endCycle(c.id)}
+                />
+              ))}
 
-                  {progress !== null && (
-                    <div>
-                      <div className="flex justify-between text-[11px] text-muted-foreground/60 mb-1.5">
-                        <span>Day {daysIn}</span>
-                        <span>{daysLeft !== null && daysLeft > 0 ? `${daysLeft}d left` : activeCycle.durationDays ? "Complete" : ""}</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress * 100}%` }}
-                          transition={{ duration: 0.8, ease: "easeOut" }}
-                          className="h-full bg-primary rounded-full"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {activeCycle.notes && (
-                    <p className="text-[12px] text-muted-foreground/60 italic leading-relaxed">"{activeCycle.notes}"</p>
-                  )}
-
-                  <div className="flex gap-2 pt-1">
-                    <motion.button
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => setShowForm(true)}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-primary/10 text-primary text-[13px] font-semibold py-2.5 rounded-xl"
-                    >
-                      <Plus size={14} strokeWidth={2.5} />
-                      New Protocol
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => {
-                        if (confirmEnd) { endCycle(activeCycle.id); setConfirmEnd(false); }
-                        else { setConfirmEnd(true); setTimeout(() => setConfirmEnd(false), 2500); }
-                      }}
-                      className={`flex-1 flex items-center justify-center gap-1.5 text-[13px] font-semibold py-2.5 rounded-xl transition-colors ${
-                        confirmEnd ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      <CheckCircle2 size={14} strokeWidth={2} />
-                      {confirmEnd ? "Confirm End" : "End Protocol"}
-                    </motion.button>
-                  </div>
-                </div>
-              )}
-
-              {/* No active cycle */}
-              {!activeCycle && (
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => setShowForm(true)}
-                  data-testid="start-cycle-button"
-                  className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold text-[15px] py-4 rounded-2xl tracking-wide"
-                >
-                  <Plus size={18} strokeWidth={2.2} />
-                  Start a Protocol
-                </motion.button>
-              )}
+              {/* Start another / start first */}
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setShowForm(true)}
+                data-testid="start-cycle-button"
+                className={`w-full flex items-center justify-center gap-2 font-semibold text-[14px] rounded-2xl tracking-wide transition-colors ${
+                  activeCycles.length === 0
+                    ? "bg-primary text-primary-foreground py-4 text-[15px]"
+                    : "bg-primary/15 border border-primary/30 text-primary py-3"
+                }`}
+              >
+                <Plus size={activeCycles.length === 0 ? 18 : 15} strokeWidth={2.4} />
+                {activeCycles.length === 0 ? "Start a Protocol" : "Start another protocol"}
+              </motion.button>
 
               {/* Past cycles */}
               {pastCycles.length > 0 && (

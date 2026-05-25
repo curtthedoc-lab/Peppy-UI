@@ -41,14 +41,18 @@ export function useCycles() {
     };
   }, []);
 
-  const activeCycle = cycles.find((c) => !c.endedAt) ?? null;
+  // All non-ended cycles, newest first (newest = lowest index in stored array).
+  const activeCycles = cycles.filter((c) => !c.endedAt);
+  // Backwards-compatible alias — first active cycle, or null.
+  const activeCycle = activeCycles[0] ?? null;
   const pastCycles = cycles.filter((c) => !!c.endedAt).reverse();
 
+  // Start a new protocol. Does NOT end any currently active protocols —
+  // multiple can run in parallel.
   const startCycle = useCallback((data: Omit<Cycle, "id" | "endedAt">) => {
     const entry: Cycle = { ...data, id: uuid() };
     setCycles((prev) => {
-      const ended = prev.map((c) => (!c.endedAt ? { ...c, endedAt: new Date().toISOString() } : c));
-      const next = [entry, ...ended];
+      const next = [entry, ...prev];
       save(next);
       return next;
     });
@@ -70,7 +74,7 @@ export function useCycles() {
     });
   }, []);
 
-  return { cycles, activeCycle, pastCycles, startCycle, endCycle, deleteCycle };
+  return { cycles, activeCycle, activeCycles, pastCycles, startCycle, endCycle, deleteCycle };
 }
 
 export function daysSince(isoDate: string): number {

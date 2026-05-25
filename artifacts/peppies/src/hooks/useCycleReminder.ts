@@ -34,14 +34,14 @@ interface ActiveCycle {
   endedAt?: string;
 }
 
-function loadActiveCycle(): ActiveCycle | null {
+function loadActiveCycles(): ActiveCycle[] {
   try {
     const raw = localStorage.getItem("peppies_cycles");
-    if (!raw) return null;
+    if (!raw) return [];
     const list = JSON.parse(raw) as ActiveCycle[];
-    return list.find((c) => !c.endedAt) ?? null;
+    return list.filter((c) => !c.endedAt);
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -69,52 +69,57 @@ function fireNotification(cycle: ActiveCycle) {
 
 export function useCycleReminder() {
   const { prefs } = usePreferences();
-  const scheduledTimer = useRef<number | null>(null);
+  // One scheduled timer per active cycle, keyed by cycle id.
+  const scheduledTimers = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
+    const clearAllTimers = () => {
+      scheduledTimers.current.forEach((t) => clearTimeout(t));
+      scheduledTimers.current.clear();
+    };
+
     if (!prefs.cycleReminders) {
-      if (scheduledTimer.current !== null) {
-        clearTimeout(scheduledTimer.current);
-        scheduledTimer.current = null;
-      }
+      clearAllTimers();
       return;
     }
     if (typeof window === "undefined" || !("Notification" in window)) return;
     if (Notification.permission !== "granted") return;
 
     const check = () => {
-      // Always clear any pending timer first — it may be tied to a stale or removed cycle.
-      if (scheduledTimer.current !== null) {
-        clearTimeout(scheduledTimer.current);
-        scheduledTimer.current = null;
-      }
-      const cycle = loadActiveCycle();
-      if (!cycle) return;
-      const endTime = cycleEndTime(cycle);
-      if (endTime === null) return;
+      // Reset all pending timers — cycles may have been added, ended, or removed.
+      clearAllTimers();
+
+      const cycles = loadActiveCycles();
+      if (cycles.length === 0) return;
       const now = Date.now();
       const notified = loadNotified();
 
-      if (now >= endTime) {
-        if (!notified.notifiedCycles.includes(cycle.id)) {
-          fireNotification(cycle);
+      for (const cycle of cycles) {
+        const endTime = cycleEndTime(cycle);
+        if (endTime === null) continue;
+
+        if (now >= endTime) {
+          if (!notified.notifiedCycles.includes(cycle.id)) {
+            fireNotification(cycle);
+          }
+          continue;
         }
-        return;
-      }
-      const msUntil = endTime - now;
-      if (msUntil <= 24 * 60 * 60 * 1000) {
-        const cycleIdAtSchedule = cycle.id;
-        scheduledTimer.current = window.setTimeout(() => {
-          scheduledTimer.current = null;
-          // Re-verify at fire time: cycle still active, same id, still past end, not already notified.
-          const fresh = loadActiveCycle();
-          if (!fresh || fresh.id !== cycleIdAtSchedule) return;
-          const freshEnd = cycleEndTime(fresh);
-          if (freshEnd === null || Date.now() < freshEnd) return;
-          const freshNotified = loadNotified();
-          if (freshNotified.notifiedCycles.includes(fresh.id)) return;
-          fireNotification(fresh);
-        }, msUntil + 1000);
+        const msUntil = endTime - now;
+        if (msUntil <= 24 * 60 * 60 * 1000) {
+          const cycleIdAtSchedule = cycle.id;
+          const timer = window.setTimeout(() => {
+            scheduledTimers.current.delete(cycleIdAtSchedule);
+            // Re-verify at fire time: cycle still active, still past end, not already notified.
+            const fresh = loadActiveCycles().find((c) => c.id === cycleIdAtSchedule);
+            if (!fresh) return;
+            const freshEnd = cycleEndTime(fresh);
+            if (freshEnd === null || Date.now() < freshEnd) return;
+            const freshNotified = loadNotified();
+            if (freshNotified.notifiedCycles.includes(fresh.id)) return;
+            fireNotification(fresh);
+          }, msUntil + 1000);
+          scheduledTimers.current.set(cycleIdAtSchedule, timer);
+        }
       }
     };
 
@@ -132,10 +137,7 @@ export function useCycleReminder() {
       window.removeEventListener("focus", check);
       window.removeEventListener(CYCLES_CHANGED_EVENT, check);
       window.removeEventListener("storage", check);
-      if (scheduledTimer.current !== null) {
-        clearTimeout(scheduledTimer.current);
-        scheduledTimer.current = null;
-      }
+      clearAllTimers();
     };
   }, [prefs.cycleReminders]);
 }

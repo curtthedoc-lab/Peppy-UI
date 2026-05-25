@@ -121,59 +121,140 @@ function RecentInjectionRow({ inj }: { inj: Injection }) {
 }
 
 function CycleCard({ onOpen }: { onOpen: () => void }) {
-  const { activeCycle } = useCycles();
-  const daysIn = activeCycle ? daysSince(activeCycle.startDate) : 0;
-  const progress = activeCycle?.durationDays ? Math.min(daysIn / activeCycle.durationDays, 1) : null;
-  const daysLeft = activeCycle?.durationDays ? Math.max(activeCycle.durationDays - daysIn, 0) : null;
+  const { activeCycles } = useCycles();
+  const count = activeCycles.length;
+  const first = activeCycles[0] ?? null;
+
+  // Subtitle depends on how many protocols are running.
+  const subtitle =
+    count === 0
+      ? "No active cycle"
+      : count === 1
+      ? "Active cycle"
+      : `${count} active cycles`;
+
+  const buttonLabel =
+    count === 0 ? (
+      <span className="flex items-center gap-1"><Plus size={13} strokeWidth={2.5} />Start</span>
+    ) : (
+      "Manage"
+    );
 
   return (
-    <motion.div variants={cardVariants} className="bg-card rounded-3xl p-5 border border-border/60 cursor-pointer active:scale-[0.985] transition-transform" onClick={onOpen} data-testid="card-active-cycle">
+    <motion.div
+      variants={cardVariants}
+      className="bg-card rounded-3xl p-5 border border-border/60 cursor-pointer active:scale-[0.985] transition-transform"
+      onClick={onOpen}
+      data-testid="card-active-cycle"
+    >
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <CardIcon icon={Activity} />
           <div>
-            <h2 className="text-[15px] font-semibold leading-tight">Protocol</h2>
-            <p className="text-[12px] text-muted-foreground/70 mt-0.5">{activeCycle ? "Active cycle" : "No active cycle"}</p>
+            <h2 className="text-[15px] font-semibold leading-tight">Protocol{count > 1 ? "s" : ""}</h2>
+            <p className="text-[12px] text-muted-foreground/70 mt-0.5">{subtitle}</p>
           </div>
         </div>
-        <button onClick={(e) => { e.stopPropagation(); onOpen(); }} className="text-[13px] font-semibold text-primary tracking-wide px-3.5 py-2 rounded-xl bg-primary/15 border border-primary/30 shadow-sm shadow-primary/10 active:scale-95 active:bg-primary/25 transition-all" style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }} data-testid="button-manage-cycle">
-          {activeCycle ? "Manage" : <span className="flex items-center gap-1"><Plus size={13} strokeWidth={2.5} />Start</span>}
+        <button
+          onClick={(e) => { e.stopPropagation(); onOpen(); }}
+          className="text-[13px] font-semibold text-primary tracking-wide px-3.5 py-2 rounded-xl bg-primary/15 border border-primary/30 shadow-sm shadow-primary/10 active:scale-95 active:bg-primary/25 transition-all"
+          style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+          data-testid="button-manage-cycle"
+        >
+          {buttonLabel}
         </button>
       </div>
-      {activeCycle ? (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-end justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-[17px] font-bold truncate leading-tight">{activeCycle.name}</p>
-              {activeCycle.notes && <p className="text-[11px] text-muted-foreground/55 italic mt-0.5 truncate">{activeCycle.notes}</p>}
-            </div>
-            <div className="text-right flex-shrink-0 ml-4">
-              <p className="text-[30px] font-bold text-primary leading-none tracking-[-0.03em]">{daysIn}</p>
-              <p className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wide">{daysIn === 1 ? "day in" : "days in"}</p>
-            </div>
-          </div>
-          {progress !== null && (
-            <div>
-              <div className="flex justify-between text-[11px] text-muted-foreground/55 mb-1.5">
-                <span>Day {daysIn} of {activeCycle.durationDays}</span>
-                <span>{daysLeft === 0 ? "Complete" : daysLeft === 1 ? "1 day left" : `${daysLeft} days left`}</span>
-              </div>
-              <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                <motion.div initial={{ width: 0 }} animate={{ width: `${progress * 100}%` }} transition={{ duration: 0.9, ease: "easeOut", delay: 0.2 }} className="h-full bg-primary rounded-full" />
-              </div>
-            </div>
-          )}
-          {!activeCycle.durationDays && (
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <span className="text-[11px] text-muted-foreground/60 font-medium">Ongoing</span>
-            </div>
-          )}
-        </div>
-      ) : (
+
+      {count === 0 && (
         <p className="text-[13px] text-muted-foreground/50 py-0.5">Track a peptide protocol — name it, set a duration, and monitor your progress day by day.</p>
       )}
+
+      {count === 1 && first && <SingleCycleBody cycle={first} />}
+
+      {count > 1 && (
+        <div className="flex flex-col gap-2.5">
+          {activeCycles.map((c) => (
+            <CompactCycleRow key={c.id} cycle={c} />
+          ))}
+        </div>
+      )}
     </motion.div>
+  );
+}
+
+function SingleCycleBody({ cycle }: { cycle: NonNullable<ReturnType<typeof useCycles>["activeCycle"]> }) {
+  const daysIn = daysSince(cycle.startDate);
+  const progress = cycle.durationDays ? Math.min(daysIn / cycle.durationDays, 1) : null;
+  const daysLeft = cycle.durationDays ? Math.max(cycle.durationDays - daysIn, 0) : null;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-end justify-between">
+        <div className="min-w-0 flex-1">
+          <p className="text-[17px] font-bold truncate leading-tight">{cycle.name}</p>
+          {cycle.notes && <p className="text-[11px] text-muted-foreground/55 italic mt-0.5 truncate">{cycle.notes}</p>}
+        </div>
+        <div className="text-right flex-shrink-0 ml-4">
+          <p className="text-[30px] font-bold text-primary leading-none tracking-[-0.03em]">{daysIn}</p>
+          <p className="text-[10px] text-muted-foreground/60 font-medium uppercase tracking-wide">{daysIn === 1 ? "day in" : "days in"}</p>
+        </div>
+      </div>
+      {progress !== null && (
+        <div>
+          <div className="flex justify-between text-[11px] text-muted-foreground/55 mb-1.5">
+            <span>Day {daysIn} of {cycle.durationDays}</span>
+            <span>{daysLeft === 0 ? "Complete" : daysLeft === 1 ? "1 day left" : `${daysLeft} days left`}</span>
+          </div>
+          <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+            <motion.div initial={{ width: 0 }} animate={{ width: `${progress * 100}%` }} transition={{ duration: 0.9, ease: "easeOut", delay: 0.2 }} className="h-full bg-primary rounded-full" />
+          </div>
+        </div>
+      )}
+      {!cycle.durationDays && (
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <span className="text-[11px] text-muted-foreground/60 font-medium">Ongoing</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CompactCycleRow({ cycle }: { cycle: NonNullable<ReturnType<typeof useCycles>["activeCycle"]> }) {
+  const daysIn = daysSince(cycle.startDate);
+  const progress = cycle.durationDays ? Math.min(daysIn / cycle.durationDays, 1) : null;
+  const daysLeft = cycle.durationDays ? Math.max(cycle.durationDays - daysIn, 0) : null;
+
+  return (
+    <div className="bg-primary/8 border border-primary/15 rounded-2xl px-3.5 py-3 flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[14px] font-semibold truncate flex-1 min-w-0">{cycle.name}</p>
+        <div className="flex items-baseline gap-1 flex-shrink-0">
+          <span className="text-[17px] font-bold text-primary tabular-nums leading-none">{daysIn}</span>
+          <span className="text-[10px] text-muted-foreground/60 font-medium">{cycle.durationDays ? `/ ${cycle.durationDays}d` : daysIn === 1 ? "day" : "days"}</span>
+        </div>
+      </div>
+      {progress !== null ? (
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progress * 100}%` }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="h-full bg-primary rounded-full"
+            />
+          </div>
+          <span className="text-[10px] text-muted-foreground/60 font-medium tabular-nums flex-shrink-0">
+            {daysLeft === 0 ? "Done" : `${daysLeft}d left`}
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-1.5">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <span className="text-[10.5px] text-muted-foreground/60 font-medium">Ongoing</span>
+        </div>
+      )}
+    </div>
   );
 }
 
