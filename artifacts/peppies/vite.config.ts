@@ -17,8 +17,16 @@ if (Number.isNaN(port) || port <= 0) {
 // in deployment the app is served at the root, so default to "/".
 const basePath = process.env.BASE_PATH ?? "/";
 
+// USDA FoodData Central API key. Injected at build time so the client can
+// call api.nal.usda.gov directly (no backend in this app). Key is free and
+// rate-limited per IP — fine to ship in the bundle.
+const fdcApiKey = process.env.FDC_API_KEY ?? "";
+
 export default defineConfig({
   base: basePath,
+  define: {
+    __FDC_API_KEY__: JSON.stringify(fdcApiKey),
+  },
   plugins: [
     react(),
     tailwindcss(),
