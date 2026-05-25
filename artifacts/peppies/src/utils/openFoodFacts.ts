@@ -1,14 +1,29 @@
 import { searchGenericFoods } from "@/data/genericFoods";
 
-export interface FoodLookupResult {
-  barcode?: string;
-  name: string;
-  brand?: string;
+// A single way to portion a food (per-serving, per-100g, per-container, etc.).
+// A lookup result can carry several bases so the user can pick the one that
+// matches what they actually ate.
+export interface FoodBasis {
+  label: string;
   serving: string;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
+}
+
+export interface FoodLookupResult {
+  barcode?: string;
+  name: string;
+  brand?: string;
+  // Default basis fields (back-compat) — mirror bases[0].
+  serving: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  // All available bases. Always populated; first item matches the default fields.
+  bases: FoodBasis[];
   source: "openfoodfacts" | "generic" | "usda";
 }
 
@@ -32,6 +47,7 @@ interface OFFProduct {
   generic_name?: string;
   brands?: string;
   serving_size?: string;
+  serving_quantity?: number;
   nutriments?: OFFNutriments;
 }
 
@@ -51,26 +67,47 @@ function num(...vals: Array<number | undefined>): number {
   return 0;
 }
 
+const r1 = (v: number) => Math.round(v * 10) / 10;
+
+function buildResult(
+  base: { name: string; brand?: string; barcode?: string; source: FoodLookupResult["source"] },
+  bases: FoodBasis[],
+): FoodLookupResult | null {
+  if (bases.length === 0) return null;
+  const first = bases[0];
+  return {
+    ...base,
+    serving: first.serving,
+    calories: first.calories,
+    protein: first.protein,
+    carbs: first.carbs,
+    fat: first.fat,
+    bases,
+  };
+}
+
 function parseOFFProduct(p: OFFProduct, fallbackName?: string): FoodLookupResult | null {
   const n = p.nutriments ?? {};
-  const hasServing =
-    typeof n["energy-kcal_serving"] === "number" ||
-    typeof n.proteins_serving === "number" ||
-    typeof n.carbohydrates_serving === "number" ||
-    typeof n.fat_serving === "number";
 
-  // Energy may be in kJ if kcal not present — convert.
-  const kcalFromServing =
+  // Energy may arrive in kJ if kcal is missing — convert.
+  const kcalServing =
     num(n["energy-kcal_serving"]) ||
     (n.energy_serving ? Math.round(n.energy_serving / 4.184) : 0);
-  const kcalFrom100 =
+  const kcal100 =
     num(n["energy-kcal_100g"]) ||
     (n.energy_100g ? Math.round(n.energy_100g / 4.184) : 0);
 
-  const calories = hasServing ? kcalFromServing : kcalFrom100;
-  const protein = hasServing ? num(n.proteins_serving) : num(n.proteins_100g);
-  const carbs = hasServing ? num(n.carbohydrates_serving) : num(n.carbohydrates_100g);
-  const fat = hasServing ? num(n.fat_serving) : num(n.fat_100g);
+  const hasServing =
+    kcalServing > 0 ||
+    num(n.proteins_serving) > 0 ||
+    num(n.carbohydrates_serving) > 0 ||
+    num(n.fat_serving) > 0;
+
+  const has100 =
+    kcal100 > 0 ||
+    num(n.proteins_100g) > 0 ||
+    num(n.carbohydrates_100g) > 0 ||
+    num(n.fat_100g) > 0;
 
   const name =
     (p.product_name_en && p.product_name_en.trim()) ||
@@ -78,24 +115,41 @@ function parseOFFProduct(p: OFFProduct, fallbackName?: string): FoodLookupResult
     (p.generic_name && p.generic_name.trim()) ||
     fallbackName ||
     "";
-
   if (!name) return null;
 
-  const serving = hasServing
-    ? (p.serving_size && p.serving_size.trim()) || "1 serving"
-    : "100 g";
+  const bases: FoodBasis[] = [];
+  if (hasServing) {
+    const servingText = (p.serving_size && p.serving_size.trim()) || "1 serving";
+    bases.push({
+      label: `Per serving (${servingText})`,
+      serving: servingText,
+      calories: Math.round(kcalServing),
+      protein: r1(num(n.proteins_serving)),
+      carbs: r1(num(n.carbohydrates_serving)),
+      fat: r1(num(n.fat_serving)),
+    });
+  }
+  if (has100) {
+    bases.push({
+      label: "Per 100 g",
+      serving: "100 g",
+      calories: Math.round(kcal100),
+      protein: r1(num(n.proteins_100g)),
+      carbs: r1(num(n.carbohydrates_100g)),
+      fat: r1(num(n.fat_100g)),
+    });
+  }
+  if (bases.length === 0) return null;
 
-  return {
-    barcode: p.code,
-    name,
-    brand: p.brands?.split(",")[0]?.trim() || undefined,
-    serving,
-    calories: Math.round(calories),
-    protein: Math.round(protein * 10) / 10,
-    carbs: Math.round(carbs * 10) / 10,
-    fat: Math.round(fat * 10) / 10,
-    source: "openfoodfacts",
-  };
+  return buildResult(
+    {
+      name,
+      brand: p.brands?.split(",")[0]?.trim() || undefined,
+      barcode: p.code,
+      source: "openfoodfacts",
+    },
+    bases,
+  );
 }
 
 export async function lookupBarcode(barcode: string): Promise<FoodLookupResult | null> {
@@ -107,7 +161,7 @@ export async function lookupBarcode(barcode: string): Promise<FoodLookupResult |
   let res: Response;
   try {
     res = await fetch(
-      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(trimmed)}.json?fields=code,product_name,product_name_en,generic_name,brands,serving_size,nutriments`,
+      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(trimmed)}.json?fields=code,product_name,product_name_en,generic_name,brands,serving_size,serving_quantity,nutriments`,
       { headers: { Accept: "application/json" } },
     );
   } catch {
@@ -155,7 +209,6 @@ interface FDCSearchResponse {
   foods?: FDCFood[];
 }
 
-// USDA standard nutrient numbers
 const FDC_KCAL = "208";
 const FDC_PROTEIN = "203";
 const FDC_FAT = "204";
@@ -175,71 +228,86 @@ function parseFDCFood(food: FDCFood): FoodLookupResult | null {
   const name = (food.description ?? "").trim();
   if (!name) return null;
 
-  // FDC nutrient values are per 100g for SR Legacy / Foundation / Survey foods,
-  // and per serving for Branded foods when servingSize is provided.
-  const isBranded = food.dataType === "Branded" && typeof food.servingSize === "number" && food.servingSize > 0;
-
   const kcalRaw = fdcNutrient(food, FDC_KCAL);
   const proteinRaw = fdcNutrient(food, FDC_PROTEIN);
   const carbsRaw = fdcNutrient(food, FDC_CARBS);
   const fatRaw = fdcNutrient(food, FDC_FAT);
 
-  // For Branded foods, FDC reports per-100g (or per-100ml) AND we have the
-  // servingSize in g/ml — scale to per-serving for consistency with OFF.
-  let calories = kcalRaw;
-  let protein = proteinRaw;
-  let carbs = carbsRaw;
-  let fat = fatRaw;
-  let serving = "100 g";
+  if (kcalRaw <= 0 && proteinRaw <= 0 && carbsRaw <= 0 && fatRaw <= 0) return null;
+
+  const bases: FoodBasis[] = [];
+  const isBranded = food.dataType === "Branded" && typeof food.servingSize === "number" && food.servingSize > 0;
 
   if (isBranded) {
     const ss = food.servingSize as number;
     const rawUnit = (food.servingSizeUnit ?? "g").toLowerCase().trim();
-    // USDA uses various aliases. Normalise to canonical "g" / "ml" so we can
-    // scale per-100 values to per-serving. "MLT" is FDC's milliliter code.
     const gAliases = new Set(["g", "gr", "grm", "gram", "grams"]);
     const mlAliases = new Set(["ml", "mlt", "milliliter", "milliliters", "millilitre", "millilitres"]);
     const isMass = gAliases.has(rawUnit);
     const isVolume = mlAliases.has(rawUnit);
+
     if (isMass || isVolume) {
       const canonical = isMass ? "g" : "ml";
       const factor = ss / 100;
-      calories = kcalRaw * factor;
-      protein = proteinRaw * factor;
-      carbs = carbsRaw * factor;
-      fat = fatRaw * factor;
-      serving = food.householdServingFullText?.trim() || `${ss} ${canonical}`;
+      const servingText = food.householdServingFullText?.trim() || `${ss} ${canonical}`;
+      bases.push({
+        label: `Per serving (${servingText})`,
+        serving: servingText,
+        calories: Math.round(kcalRaw * factor),
+        protein: r1(proteinRaw * factor),
+        carbs: r1(carbsRaw * factor),
+        fat: r1(fatRaw * factor),
+      });
+      bases.push({
+        label: `Per 100 ${canonical}`,
+        serving: `100 ${canonical}`,
+        calories: Math.round(kcalRaw),
+        protein: r1(proteinRaw),
+        carbs: r1(carbsRaw),
+        fat: r1(fatRaw),
+      });
     } else {
-      // Unknown unit — don't trust the per-100 values as per-serving.
-      // Keep raw per-100 values labelled honestly.
-      serving = "100 g";
+      // Unknown unit — values are per-100g but we can't trust the serving text.
+      bases.push({
+        label: "Per 100 g",
+        serving: "100 g",
+        calories: Math.round(kcalRaw),
+        protein: r1(proteinRaw),
+        carbs: r1(carbsRaw),
+        fat: r1(fatRaw),
+      });
     }
-  } else if (food.householdServingFullText) {
-    serving = food.householdServingFullText.trim();
+  } else {
+    // Foundation / SR Legacy / Survey — values are per-100g.
+    const servingText = food.householdServingFullText?.trim();
+    bases.push({
+      label: "Per 100 g",
+      serving: "100 g",
+      calories: Math.round(kcalRaw),
+      protein: r1(proteinRaw),
+      carbs: r1(carbsRaw),
+      fat: r1(fatRaw),
+    });
+    if (servingText) {
+      // Show the household text as info, but we can't scale it without knowing grams.
+      // Skip adding as a separate basis to avoid duplicate macros.
+    }
   }
 
-  if (calories <= 0 && protein <= 0 && carbs <= 0 && fat <= 0) return null;
-
-  const brand = (food.brandName || food.brandOwner)?.trim() || undefined;
-
-  return {
-    name,
-    brand,
-    serving,
-    calories: Math.round(calories),
-    protein: Math.round(protein * 10) / 10,
-    carbs: Math.round(carbs * 10) / 10,
-    fat: Math.round(fat * 10) / 10,
-    source: "usda",
-  };
+  return buildResult(
+    {
+      name,
+      brand: (food.brandName || food.brandOwner)?.trim() || undefined,
+      source: "usda",
+    },
+    bases,
+  );
 }
 
 async function searchUSDA(query: string, signal?: AbortSignal): Promise<FoodLookupResult[]> {
   const key = typeof __FDC_API_KEY__ === "string" ? __FDC_API_KEY__ : "";
   if (!key) return [];
 
-  // Prefer Foundation / SR Legacy first (clean generic entries), then Branded.
-  // pageSize 10 keeps it fast.
   const url =
     `https://api.nal.usda.gov/fdc/v1/foods/search` +
     `?api_key=${encodeURIComponent(key)}` +
@@ -267,7 +335,7 @@ async function searchUSDA(query: string, signal?: AbortSignal): Promise<FoodLook
 }
 
 // Search across all sources by free text. Returns up to ~12 results, merging:
-//   1. local generic catalog (banana, eggs, etc.)
+//   1. local generic catalog
 //   2. USDA FoodData Central
 //   3. Open Food Facts
 // in that priority order, deduped by name+serving.
@@ -280,8 +348,6 @@ export async function searchFoods(
 
   const local = searchGenericFoods(q).slice(0, 4);
 
-  // Fire USDA + OFF in parallel. Each catches its own errors so a slow/failing
-  // one never blocks the other.
   const [usda, off] = await Promise.all([
     searchUSDA(q, signal).catch((e) => {
       if (signal?.aborted) throw e;
@@ -290,7 +356,7 @@ export async function searchFoods(
     (async () => {
       try {
         const res = await fetch(
-          `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&sort_by=popularity_key&fields=code,product_name,product_name_en,generic_name,brands,serving_size,nutriments`,
+          `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&sort_by=popularity_key&fields=code,product_name,product_name_en,generic_name,brands,serving_size,serving_quantity,nutriments`,
           { headers: { Accept: "application/json" }, signal },
         );
         if (!res.ok) return [] as FoodLookupResult[];
@@ -305,7 +371,6 @@ export async function searchFoods(
     })(),
   ]);
 
-  // De-dupe and cap at 12. Local first, then USDA, then OFF.
   const seen = new Set<string>();
   const out: FoodLookupResult[] = [];
   for (const r of [...local, ...usda, ...off]) {

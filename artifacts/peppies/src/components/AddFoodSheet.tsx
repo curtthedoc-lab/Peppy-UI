@@ -30,6 +30,11 @@ interface Base {
   serving: string;
 }
 
+interface ActiveLookup {
+  result: FoodLookupResult;
+  basisIndex: number;
+}
+
 interface AddFoodSheetProps {
   initial?: Partial<FoodEntry>;
   defaultMeal?: MealType;
@@ -68,6 +73,7 @@ export function AddFoodSheet({
   const [showScanner, setShowScanner] = useState(false);
   const [lookingUp, setLookingUp] = useState(false);
   const [base, setBase] = useState<Base | null>(null);
+  const [activeLookup, setActiveLookup] = useState<ActiveLookup | null>(null);
   const [quantity, setQuantity] = useState("1");
   const [lookupError, setLookupError] = useState<string | null>(null);
 
@@ -172,26 +178,33 @@ export function AddFoodSheet({
     }
   };
 
-  const applyLookup = (result: FoodLookupResult) => {
+  const applyLookup = (result: FoodLookupResult, basisIndex = 0) => {
+    const basis = result.bases[basisIndex] ?? result.bases[0];
     const newBase: Base = {
-      calories: result.calories,
-      protein: result.protein,
-      carbs: result.carbs,
-      fat: result.fat,
-      serving: result.serving,
+      calories: basis.calories,
+      protein: basis.protein,
+      carbs: basis.carbs,
+      fat: basis.fat,
+      serving: basis.serving,
     };
     setBase(newBase);
+    setActiveLookup({ result, basisIndex });
     setQuantity("1");
     const name = result.brand ? `${result.brand} — ${result.name}` : result.name;
     setDraft((d) => ({
       ...d,
       name,
-      serving: result.serving,
-      calories: String(result.calories),
-      protein: String(result.protein),
-      carbs: String(result.carbs),
-      fat: String(result.fat),
+      serving: basis.serving,
+      calories: String(basis.calories),
+      protein: String(basis.protein),
+      carbs: String(basis.carbs),
+      fat: String(basis.fat),
     }));
+  };
+
+  const pickBasis = (index: number) => {
+    if (!activeLookup) return;
+    applyLookup(activeLookup.result, index);
   };
 
   const qtyNum = (() => {
@@ -223,6 +236,7 @@ export function AddFoodSheet({
       fat: String(scaled.fat),
     }));
     setBase(null);
+    setActiveLookup(null);
     setQuantity("1");
   };
 
@@ -417,6 +431,28 @@ export function AddFoodSheet({
 
           {scaled ? (
             <>
+              {activeLookup && activeLookup.result.bases.length > 1 && (
+                <Field label="Basis">
+                  <div className="flex flex-wrap gap-1.5">
+                    {activeLookup.result.bases.map((b, i) => (
+                      <button
+                        key={`${b.label}-${i}`}
+                        type="button"
+                        onClick={() => pickBasis(i)}
+                        className={`px-3 py-2 rounded-xl text-[12px] font-semibold transition-all ${
+                          i === activeLookup.basisIndex
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "bg-muted/60 text-muted-foreground/80"
+                        }`}
+                        data-testid={`basis-${i}`}
+                      >
+                        {b.label}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+              )}
+
               <Field label={`Servings × ${qtyNum}`}>
                 <div className="flex items-center gap-2">
                   <button

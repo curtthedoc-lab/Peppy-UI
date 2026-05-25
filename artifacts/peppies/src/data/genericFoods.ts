@@ -1,6 +1,6 @@
 import type { FoodLookupResult } from "@/utils/openFoodFacts";
 
-type Generic = Omit<FoodLookupResult, "source" | "barcode" | "brand"> & {
+type Generic = Omit<FoodLookupResult, "source" | "barcode" | "brand" | "bases"> & {
   keywords: string[];
 };
 
@@ -106,5 +106,15 @@ export function searchGenericFoods(query: string): FoodLookupResult[] {
     carbs: item.carbs,
     fat: item.fat,
     source: "generic" as const,
+    bases: [
+      {
+        label: item.serving,
+        serving: item.serving,
+        calories: item.calories,
+        protein: item.protein,
+        carbs: item.carbs,
+        fat: item.fat,
+      },
+    ],
   }));
 }
