@@ -39,13 +39,13 @@ export const PEPTIDE_REFERENCE: PeptideRef[] = [
   },
   {
     name: "Wolverine",
-    vialSizes: "10 mg (5 mg BPC-157 + 5 mg TB-500)",
-    doseRange: "600–1,000 mcg total/day",
+    vialSizes: "10 mg (5 mg BPC-157 + 5 mg TB-500), 20 mg preload (10 mg BPC-157 + 10 mg TB-500)",
+    doseRange: "600–1,000 mcg total/day (maintenance); 20 mg preload front-loaded over the first 2–4 weeks",
     bacWaterMl: 3,
     vialMg: 10,
-    concentration: "3.33 mg/mL total (1.67 mg/mL each)",
-    perUnit: "≈ 33.3 mcg per unit (blend total)",
-    notes: "Pre-mixed BPC-157 + TB-500 blend. Subcutaneous, once daily. Provides complementary mechanisms — systemic repair (TB-500) and localised healing (BPC-157). Swirl gently to reconstitute.",
+    concentration: "3.33 mg/mL total (1.67 mg/mL each) for the 10 mg vial; 6.67 mg/mL total (3.33 mg/mL each) for the 20 mg preload reconstituted with 3 mL BAC water",
+    perUnit: "≈ 33.3 mcg per unit (10 mg vial) · ≈ 66.7 mcg per unit (20 mg preload)",
+    notes: "Pre-mixed BPC-157 + TB-500 blend. Subcutaneous, once daily. Provides complementary mechanisms — systemic repair (TB-500) and localised healing (BPC-157). The 20 mg preload is a loading-phase vial used to front-load the stack for the first 2–4 weeks (typically 1,500–2,000 mcg/day), then drop to a 10 mg maintenance vial. Swirl gently to reconstitute.",
     source: "peptidedosages.com",
   },
   {
