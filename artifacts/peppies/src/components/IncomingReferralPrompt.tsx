@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Tag, Check, X } from "lucide-react";
+import { Tag, Check, X, User } from "lucide-react";
 import { useAffiliate } from "@/hooks/useAffiliate";
 import type { IncomingReferral } from "@/utils/affiliateShare";
 
@@ -12,16 +12,26 @@ interface Props {
 // Shown when an existing user opens a share link (?ref=...).
 // Asks whether to save/replace their affiliate.
 export function IncomingReferralPrompt({ incoming, onDismiss }: Props) {
-  const { affiliate, hasAffiliate, setAffiliate } = useAffiliate();
-  const [done, setDone] = useState(false);
+  const { affiliate, hasAffiliate, setAffiliate, setPersonal } = useAffiliate();
+  const [done, setDone] = useState<"" | "main" | "personal">("");
 
-  const handleSave = () => {
+  const handleSaveMain = () => {
     setAffiliate({
       name: incoming.name || affiliate.name,
       code: incoming.code || affiliate.code,
       url: incoming.url || affiliate.url,
     });
-    setDone(true);
+    setDone("main");
+    setTimeout(onDismiss, 1100);
+  };
+
+  const handleSavePersonal = () => {
+    if (!incoming.url) return;
+    setPersonal({
+      name: incoming.name || "",
+      url: incoming.url,
+    });
+    setDone("personal");
     setTimeout(onDismiss, 1100);
   };
 
@@ -83,24 +93,48 @@ export function IncomingReferralPrompt({ incoming, onDismiss }: Props) {
         <div className="flex flex-col gap-2">
           <motion.button
             whileTap={{ scale: 0.97 }}
-            onClick={handleSave}
-            disabled={done}
+            onClick={handleSaveMain}
+            disabled={!!done}
             className="w-full bg-primary text-primary-foreground font-semibold text-[15px] py-4 rounded-2xl disabled:opacity-70 tracking-wide flex items-center justify-center gap-2"
             data-testid="button-accept-incoming-referral"
           >
-            {done ? (
+            {done === "main" ? (
               <>
-                <Check size={15} strokeWidth={2.4} /> Saved
+                <Check size={15} strokeWidth={2.4} /> Saved as main
               </>
             ) : hasAffiliate ? (
-              "Replace and save"
+              "Replace my main referral"
             ) : (
-              "Save referral"
+              "Save as main referral"
             )}
           </motion.button>
+
+          {/* Save as personal link — available only when there's a URL to save */}
+          {incoming.url && (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={handleSavePersonal}
+              disabled={!!done}
+              className="w-full bg-muted text-foreground font-semibold text-[13.5px] py-3.5 rounded-2xl disabled:opacity-70 tracking-wide flex items-center justify-center gap-2 border border-border/60"
+              data-testid="button-save-as-personal"
+            >
+              {done === "personal" ? (
+                <>
+                  <Check size={14} strokeWidth={2.4} /> Saved as personal
+                </>
+              ) : (
+                <>
+                  <User size={13} strokeWidth={2.3} />
+                  {hasAffiliate ? "Save as personal link (keep main)" : "Save as personal link only"}
+                </>
+              )}
+            </motion.button>
+          )}
+
           <button
             onClick={onDismiss}
-            className="w-full bg-muted text-muted-foreground font-semibold text-[13.5px] py-3 rounded-2xl tracking-wide"
+            disabled={!!done}
+            className="w-full bg-transparent text-muted-foreground/70 font-semibold text-[12.5px] py-2.5 rounded-2xl tracking-wide disabled:opacity-50"
             data-testid="button-decline-incoming-referral"
           >
             No thanks

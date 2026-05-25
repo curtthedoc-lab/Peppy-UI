@@ -1,31 +1,43 @@
 import { useState, useCallback, useEffect } from "react";
 
+export interface PersonalLink {
+  name: string;
+  url: string;
+}
+
 export interface Affiliate {
   name: string;
   code: string;
   url: string;
   shareCount: number;
+  personal: PersonalLink;
 }
 
 const STORAGE_KEY = "peppies_affiliate";
 const EVENT = "peppies_affiliate_changed";
 
-const EMPTY: Affiliate = { name: "", code: "", url: "", shareCount: 0 };
+const EMPTY_PERSONAL: PersonalLink = { name: "", url: "" };
+const EMPTY: Affiliate = { name: "", code: "", url: "", shareCount: 0, personal: EMPTY_PERSONAL };
 
 function load(): Affiliate {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return EMPTY;
-    const parsed = JSON.parse(raw) as Partial<Affiliate>;
+    const parsed = JSON.parse(raw) as Partial<Affiliate> & { personal?: Partial<PersonalLink> };
     const count =
       typeof parsed.shareCount === "number" && isFinite(parsed.shareCount) && parsed.shareCount >= 0
         ? Math.floor(parsed.shareCount)
         : 0;
+    const personal: PersonalLink = {
+      name: typeof parsed.personal?.name === "string" ? parsed.personal.name : "",
+      url: typeof parsed.personal?.url === "string" ? parsed.personal.url : "",
+    };
     return {
       name: typeof parsed.name === "string" ? parsed.name : "",
       code: typeof parsed.code === "string" ? parsed.code : "",
       url: typeof parsed.url === "string" ? parsed.url : "",
       shareCount: count,
+      personal,
     };
   } catch {
     return EMPTY;
@@ -33,8 +45,10 @@ function load(): Affiliate {
 }
 
 function save(a: Affiliate) {
-  // Treat as "no record" only when affiliate info AND counter are all zero.
-  if (!a.name && !a.code && !a.url && !a.shareCount) {
+  // Treat as "no record" only when EVERYTHING is empty.
+  const hasAnything =
+    a.name || a.code || a.url || a.shareCount || a.personal.name || a.personal.url;
+  if (!hasAnything) {
     localStorage.removeItem(STORAGE_KEY);
   } else {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(a));
@@ -82,6 +96,7 @@ export function useAffiliate() {
           code: next.code.trim(),
           url: next.url.trim() ? normalizeUrl(next.url) : "",
           shareCount: typeof next.shareCount === "number" ? next.shareCount : prev.shareCount,
+          personal: prev.personal,
         };
         save(cleaned);
         return cleaned;
@@ -89,6 +104,28 @@ export function useAffiliate() {
     },
     []
   );
+
+  const setPersonal = useCallback((next: PersonalLink) => {
+    setAffiliate((prev) => {
+      const cleaned: Affiliate = {
+        ...prev,
+        personal: {
+          name: next.name.trim(),
+          url: next.url.trim() ? normalizeUrl(next.url) : "",
+        },
+      };
+      save(cleaned);
+      return cleaned;
+    });
+  }, []);
+
+  const clearPersonal = useCallback(() => {
+    setAffiliate((prev) => {
+      const next: Affiliate = { ...prev, personal: EMPTY_PERSONAL };
+      save(next);
+      return next;
+    });
+  }, []);
 
   const bumpShareCount = useCallback(() => {
     setAffiliate((prev) => {
@@ -112,12 +149,17 @@ export function useAffiliate() {
   }, []);
 
   const hasAffiliate = !!affiliate.url;
+  const hasPersonal = !!affiliate.personal.url;
 
   return {
     affiliate,
     hasAffiliate,
+    hasPersonal,
+    personal: affiliate.personal,
     shareCount: affiliate.shareCount,
     setAffiliate: setAndSave,
+    setPersonal,
+    clearPersonal,
     bumpShareCount,
     resetShareCount,
     clear,

@@ -1,11 +1,23 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { X, ExternalLink, Copy, Check, Trash2, Tag, Share2, Link2, Users, RotateCcw } from "lucide-react";
+import { X, ExternalLink, Copy, Check, Trash2, Tag, Share2, Link2, Users, RotateCcw, User } from "lucide-react";
 import { useAffiliate, isValidUrl, normalizeUrl } from "@/hooks/useAffiliate";
 import { buildReferralLink, buildShareMessage } from "@/utils/affiliateShare";
 
 export function AffiliateSheet({ onClose }: { onClose: () => void }) {
-  const { affiliate, hasAffiliate, shareCount, setAffiliate, bumpShareCount, resetShareCount, clear } = useAffiliate();
+  const {
+    affiliate,
+    hasAffiliate,
+    hasPersonal,
+    personal,
+    shareCount,
+    setAffiliate,
+    setPersonal,
+    clearPersonal,
+    bumpShareCount,
+    resetShareCount,
+    clear,
+  } = useAffiliate();
   const [name, setName] = useState(affiliate.name);
   const [code, setCode] = useState(affiliate.code);
   const [url, setUrl] = useState(affiliate.url);
@@ -15,11 +27,38 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
   const [confirmClear, setConfirmClear] = useState(false);
   const [shareStatus, setShareStatus] = useState<"" | "shared" | "copied" | "error">("");
 
+  // Personal link form state
+  const [pName, setPName] = useState(personal.name);
+  const [pUrl, setPUrl] = useState(personal.url);
+  const [pError, setPError] = useState("");
+  const [pSaved, setPSaved] = useState(false);
+  const [confirmClearP, setConfirmClearP] = useState(false);
+
   useEffect(() => {
     setName(affiliate.name);
     setCode(affiliate.code);
     setUrl(affiliate.url);
   }, [affiliate.name, affiliate.code, affiliate.url]);
+
+  useEffect(() => {
+    setPName(personal.name);
+    setPUrl(personal.url);
+  }, [personal.name, personal.url]);
+
+  const handleSavePersonal = () => {
+    if (!pUrl.trim()) {
+      setPError("A link is required");
+      return;
+    }
+    if (!isValidUrl(pUrl)) {
+      setPError("That doesn't look like a valid link");
+      return;
+    }
+    setPersonal({ name: pName, url: pUrl });
+    setPError("");
+    setPSaved(true);
+    setTimeout(() => setPSaved(false), 1500);
+  };
 
   const handleSave = () => {
     if (!url.trim()) {
@@ -320,7 +359,122 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {/* Clear */}
+        {/* Personal link — separate slot */}
+        <div className="border-t border-border/40 pt-5 flex flex-col gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-muted text-foreground/70 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <User size={15} strokeWidth={2.2} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13.5px] font-semibold leading-tight">Your personal link</p>
+              <p className="text-[11.5px] text-muted-foreground/70 mt-1 leading-relaxed">
+                A second link just for you — for example one a friend shared with you after you signed up, or your own backup vendor. Not included when you share Peppies.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground/70 mb-1.5 block">
+              Label (optional)
+            </label>
+            <input
+              value={pName}
+              onChange={(e) => setPName(e.target.value)}
+              placeholder="e.g. From Sarah, or My backup"
+              className="w-full bg-background border border-border/60 rounded-2xl px-4 py-3 text-[14px] placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
+              data-testid="input-personal-name"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground/70 mb-1.5 block">
+              Personal link <span className="text-destructive/70">*</span>
+            </label>
+            <input
+              value={pUrl}
+              onChange={(e) => {
+                setPUrl(e.target.value);
+                setPError("");
+              }}
+              onBlur={() => {
+                if (pUrl.trim()) setPUrl(normalizeUrl(pUrl));
+              }}
+              placeholder="https://sarah42.r3vivelabs.com"
+              inputMode="url"
+              autoCapitalize="off"
+              autoCorrect="off"
+              className="w-full bg-background border border-border/60 rounded-2xl px-4 py-3 text-[14px] placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
+              data-testid="input-personal-url"
+            />
+          </div>
+          {pError && <p className="text-[12px] text-destructive">{pError}</p>}
+
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={handleSavePersonal}
+            disabled={!pUrl.trim()}
+            className="w-full bg-muted text-foreground font-semibold text-[14px] py-3.5 rounded-2xl disabled:opacity-40 tracking-wide flex items-center justify-center gap-2"
+            data-testid="button-save-personal"
+          >
+            {pSaved ? (
+              <>
+                <Check size={14} strokeWidth={2.4} />
+                Saved
+              </>
+            ) : (
+              "Save personal link"
+            )}
+          </motion.button>
+
+          {hasPersonal && personal.url && (
+            <a
+              href={personal.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-background border border-border/60 text-foreground font-semibold text-[13.5px] py-3 rounded-2xl tracking-wide flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+              data-testid="link-open-personal"
+            >
+              <ExternalLink size={13} strokeWidth={2.2} />
+              Open personal link
+            </a>
+          )}
+
+          {hasPersonal && (
+            <div className="flex flex-col items-center">
+              {!confirmClearP ? (
+                <button
+                  onClick={() => setConfirmClearP(true)}
+                  className="text-[11.5px] text-muted-foreground/70 flex items-center gap-1.5 px-3 py-1.5"
+                  data-testid="button-clear-personal"
+                >
+                  <Trash2 size={10.5} strokeWidth={2.2} />
+                  Remove personal link
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      clearPersonal();
+                      setConfirmClearP(false);
+                      setPName("");
+                      setPUrl("");
+                    }}
+                    className="text-[12px] font-semibold bg-destructive/15 text-destructive px-3.5 py-2 rounded-xl"
+                  >
+                    Yes, remove
+                  </button>
+                  <button
+                    onClick={() => setConfirmClearP(false)}
+                    className="text-[12px] font-semibold bg-muted text-muted-foreground px-3.5 py-2 rounded-xl"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Clear main affiliate */}
         {hasAffiliate && (
           <div className="flex flex-col items-center pt-1">
             {!confirmClear ? (
@@ -341,6 +495,8 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
                     setName("");
                     setCode("");
                     setUrl("");
+                    setPName("");
+                    setPUrl("");
                   }}
                   className="text-[12px] font-semibold bg-destructive/15 text-destructive px-3.5 py-2 rounded-xl"
                 >
