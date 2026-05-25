@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ShieldAlert, Tag, ArrowRight } from "lucide-react";
 import { useAffiliate, isValidUrl, normalizeUrl } from "@/hooks/useAffiliate";
+import type { IncomingReferral } from "@/utils/affiliateShare";
 
 const STORAGE_KEY = "peppies_disclaimer_v1";
 
@@ -9,18 +10,26 @@ export function useDisclaimerAccepted() {
   return localStorage.getItem(STORAGE_KEY) === "true";
 }
 
-export function Disclaimer({ onAccept }: { onAccept: () => void }) {
+interface DisclaimerProps {
+  onAccept: () => void;
+  initialReferral?: IncomingReferral;
+  onReferralConsumed?: () => void;
+}
+
+export function Disclaimer({ onAccept, initialReferral, onReferralConsumed }: DisclaimerProps) {
   const [accepting, setAccepting] = useState(false);
   const [step, setStep] = useState<"terms" | "referral">("terms");
   const { setAffiliate } = useAffiliate();
-  const [refName, setRefName] = useState("");
-  const [refCode, setRefCode] = useState("");
-  const [refUrl, setRefUrl] = useState("");
+  const [refName, setRefName] = useState(initialReferral?.name ?? "");
+  const [refCode, setRefCode] = useState(initialReferral?.code ?? "");
+  const [refUrl, setRefUrl] = useState(initialReferral?.url ?? "");
   const [refError, setRefError] = useState("");
+  const prefilled = !!initialReferral && (!!initialReferral.code || !!initialReferral.url);
 
   const finish = () => {
     setAccepting(true);
     localStorage.setItem(STORAGE_KEY, "true");
+    onReferralConsumed?.();
     setTimeout(onAccept, 320);
   };
 
@@ -138,11 +147,20 @@ export function Disclaimer({ onAccept }: { onAccept: () => void }) {
 
               <div className="text-center mb-5">
                 <h1 className="text-[24px] font-bold tracking-[-0.03em] mb-2">
-                  Were you referred by an affiliate?
+                  {prefilled ? "You've been referred" : "Were you referred by an affiliate?"}
                 </h1>
                 <p className="text-[13px] text-muted-foreground leading-relaxed">
-                  Save the link now and Peppies will give you a one-tap{" "}
-                  <span className="text-primary font-semibold">Shop Peptides</span> button on the home screen. You can change this any time in Settings.
+                  {prefilled ? (
+                    <>
+                      The link you opened came with a referral. Tap{" "}
+                      <span className="text-primary font-semibold">Save & Continue</span> to keep it. You can change it any time in Settings.
+                    </>
+                  ) : (
+                    <>
+                      Save the link now and Peppies will give you a one-tap{" "}
+                      <span className="text-primary font-semibold">Shop Peptides</span> button on the home screen. You can change this any time in Settings.
+                    </>
+                  )}
                 </p>
               </div>
 

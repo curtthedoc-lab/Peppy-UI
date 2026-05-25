@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { X, ExternalLink, Copy, Check, Trash2, Tag } from "lucide-react";
+import { X, ExternalLink, Copy, Check, Trash2, Tag, Share2, Link2 } from "lucide-react";
 import { useAffiliate, isValidUrl, normalizeUrl } from "@/hooks/useAffiliate";
+import { buildReferralLink, buildShareMessage } from "@/utils/affiliateShare";
 
 export function AffiliateSheet({ onClose }: { onClose: () => void }) {
   const { affiliate, hasAffiliate, setAffiliate, clear } = useAffiliate();
@@ -12,6 +13,7 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [shareStatus, setShareStatus] = useState<"" | "shared" | "copied" | "error">("");
 
   useEffect(() => {
     setName(affiliate.name);
@@ -42,6 +44,50 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
       setTimeout(() => setCopied(false), 1500);
     } catch {
       // ignore — clipboard may be blocked
+    }
+  };
+
+  const handleShareReferral = async () => {
+    if (!hasAffiliate) return;
+    const link = buildReferralLink(affiliate);
+    const message = buildShareMessage(affiliate, link);
+    setShareStatus("");
+    // Prefer native share where available (mobile, PWA). Fall back to clipboard.
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({
+          title: "Peppies — peptide tracker",
+          text: message,
+          url: link,
+        });
+        setShareStatus("shared");
+        setTimeout(() => setShareStatus(""), 2000);
+        return;
+      } catch (err) {
+        // User cancelled — don't show error. Other errors fall through to clipboard.
+        if ((err as DOMException)?.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(`${message}`);
+      setShareStatus("copied");
+      setTimeout(() => setShareStatus(""), 2200);
+    } catch {
+      setShareStatus("error");
+      setTimeout(() => setShareStatus(""), 2200);
+    }
+  };
+
+  const handleCopyShareLink = async () => {
+    if (!hasAffiliate) return;
+    const link = buildReferralLink(affiliate);
+    try {
+      await navigator.clipboard.writeText(link);
+      setShareStatus("copied");
+      setTimeout(() => setShareStatus(""), 2200);
+    } catch {
+      setShareStatus("error");
+      setTimeout(() => setShareStatus(""), 2200);
     }
   };
 
@@ -189,6 +235,54 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
             </a>
           )}
         </div>
+
+        {/* Share your referral */}
+        {hasAffiliate && (
+          <div className="bg-background border border-border/60 rounded-2xl p-4 flex flex-col gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-primary/15 text-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                <Share2 size={15} strokeWidth={2.2} />
+              </div>
+              <div>
+                <p className="text-[13.5px] font-semibold leading-tight">Share your referral</p>
+                <p className="text-[11.5px] text-muted-foreground/70 mt-1 leading-relaxed">
+                  Send a Peppies link that auto-fills your code and link in the other person's onboarding.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleShareReferral}
+                className="flex-1 bg-primary text-primary-foreground font-semibold text-[13.5px] py-3 rounded-xl flex items-center justify-center gap-1.5"
+                data-testid="button-share-referral"
+              >
+                <Share2 size={13} strokeWidth={2.4} />
+                Share
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleCopyShareLink}
+                className="flex-1 bg-muted text-foreground font-semibold text-[13.5px] py-3 rounded-xl flex items-center justify-center gap-1.5"
+                data-testid="button-copy-share-link"
+              >
+                <Link2 size={13} strokeWidth={2.4} />
+                Copy link
+              </motion.button>
+            </div>
+            {shareStatus === "shared" && (
+              <p className="text-[11.5px] text-primary text-center -mt-1">Shared</p>
+            )}
+            {shareStatus === "copied" && (
+              <p className="text-[11.5px] text-primary text-center -mt-1">Link copied to clipboard</p>
+            )}
+            {shareStatus === "error" && (
+              <p className="text-[11.5px] text-destructive text-center -mt-1">
+                Couldn't share or copy — try long-pressing the link in Manage to copy manually.
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Clear */}
         {hasAffiliate && (

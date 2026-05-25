@@ -15,8 +15,10 @@ import { Nutrition } from "@/pages/Nutrition";
 import { Steps } from "@/pages/Steps";
 import { Settings } from "@/pages/Settings";
 import { Disclaimer, useDisclaimerAccepted } from "@/components/Disclaimer";
+import { IncomingReferralPrompt } from "@/components/IncomingReferralPrompt";
 import NotFound from "@/pages/not-found";
 import { useCycleReminder } from "@/hooks/useCycleReminder";
+import { parseReferralFromUrl, clearReferralFromUrl, type IncomingReferral } from "@/utils/affiliateShare";
 
 const queryClient = new QueryClient();
 
@@ -37,11 +39,21 @@ function Router() {
 
 function App() {
   const [accepted, setAccepted] = useState(useDisclaimerAccepted);
+  const [incoming, setIncoming] = useState<IncomingReferral | null>(() => parseReferralFromUrl());
   useCycleReminder();
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
   }, []);
+
+  useEffect(() => {
+    // Clear the ref params from the URL bar once captured, so a refresh doesn't re-prompt.
+    if (incoming) clearReferralFromUrl();
+  }, [incoming]);
+
+  // If user has not accepted yet, the incoming referral is handed to the Disclaimer onboarding.
+  // If user has already accepted, we show a one-time prompt to save/replace.
+  const showIncomingPrompt = accepted && !!incoming;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -52,7 +64,17 @@ function App() {
           </Layout>
           <AnimatePresence>
             {!accepted && (
-              <Disclaimer onAccept={() => setAccepted(true)} />
+              <Disclaimer
+                onAccept={() => setAccepted(true)}
+                initialReferral={incoming ?? undefined}
+                onReferralConsumed={() => setIncoming(null)}
+              />
+            )}
+            {showIncomingPrompt && incoming && (
+              <IncomingReferralPrompt
+                incoming={incoming}
+                onDismiss={() => setIncoming(null)}
+              />
             )}
           </AnimatePresence>
         </WouterRouter>

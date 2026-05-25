@@ -107,9 +107,9 @@ const STEPS: Step[] = [
   },
   {
     icon: ShoppingBag,
-    title: "13. Save your vendor referral link",
+    title: "13. Save and share your vendor referral",
     body:
-      "Settings → Shop & Resources → Affiliate / Referral. Save the name, code, and link of the peptide vendor that referred you. Once saved, a Shop Peptides button appears on the home screen — tapping it opens the link in your browser. You can update or remove it any time, and you'll also be prompted during first setup.",
+      "Settings → Shop & Resources → Affiliate / Referral. Save the name, code, and link of the peptide vendor that referred you. Once saved, a Shop Peptides button appears on the home screen — tap it to open the link in your browser. To pass it to a friend, tap Share inside the Affiliate sheet — it sends a special Peppies link that auto-fills your code and link during their onboarding. You can update or remove your saved referral any time.",
   },
   {
     icon: Download,
