@@ -1,55 +1,63 @@
 # Peppies
 
-A dark-mode, mobile-first PWA for peptide injection tracking, dose calculation, and daily health logging. Built to be private, offline-friendly, and pleasant to use on a phone.
+> A dark-mode, mobile-first PWA for peptide protocols — log injections, calculate doses, and track the daily metrics that go with them. All on your device, all yours.
 
-**Live app:** published on `.replit.app`
-**Status:** active personal project
+<p align="center">
+  <img src="docs/screenshots/home.jpg" alt="Peppies onboarding screen" width="320" />
+</p>
+
+Peppies is a single-page web app that replaces the tangle of notes, spreadsheets, and reminder timers most people use to keep track of a peptide protocol. It's installable as a PWA, works offline after the first load, and stores everything in your browser — no account, no server, no analytics.
+
+**Live:** published on `.replit.app`
+**Status:** active personal project, used daily
 
 ---
 
-## What it does
-
-Peppies is a single-page app that tracks your peptide protocol alongside the day-to-day metrics that matter when you're on one. Everything lives on your device — there is no backend, no account, no telemetry, no cloud sync.
+## Features
 
 ### Peptide tools
-- **Injection log** — record every shot with peptide name, dose, site, and time. Quick-repeat your last injection in one tap.
-- **Dose calculator** — convert between mg, mcg, mL, and IU using your vial concentration and syringe size. Saves your last calculation per peptide.
-- **Cycle tracker** — start, pause, and end protocols. Optional browser notification when a cycle wraps up.
-- **History view** — chronological list of past injections and cycles, plus CSV export.
-- **Body-map site picker** — rotate injection sites visually.
+| | |
+|---|---|
+| **Injection log** | One-tap logging with peptide, dose, site, and time. Quick-repeat your last shot. |
+| **Dose calculator** | Convert between mg, mcg, mL, and IU using vial concentration and syringe size. Remembers your last calc per peptide. |
+| **Cycle tracker** | Start, pause, and end protocols. Optional browser notification when a cycle ends. |
+| **Body-map site picker** | Rotate injection sites visually so you can see what you used last. |
+| **History + CSV export** | Chronological log of every injection and cycle, exportable as a spreadsheet. |
+| **Peptide reference** | Built-in info for common research peptides. |
 
 ### Daily metrics
-- **Weight log** with trend
-- **Sleep log** (hours + quality)
-- **Hydration tracker** (cups / liters)
-- **Step tracker** with daily goal
-- **Calorie & macro log** — barcode scanner via Open Food Facts, manual entry, macro ring
+- **Weight** with trend line
+- **Sleep** (hours + quality)
+- **Hydration** (cups / liters)
+- **Steps** with a daily goal
+- **Calories & macros** — barcode scanner (Open Food Facts), manual entry, macro ring on the home screen
 
-### Affiliate / referral system
-- **Save your peptide vendor's referral** (name + code + link). A prominent **Shop Peptides** button appears on the home screen and opens the vendor in your browser.
-- **Share with friends** — the share button generates a special Peppies link (`?ref=...&url=...&name=...`) that pre-fills your referral during their onboarding. Counts how many friends you've shared with.
-- **Personal link slot** — a separate, private second link (for example, one a friend shared with you after you signed up). Never included when you share Peppies.
+### Referral system
+Most people on peptides got there through a friend or vendor referral, and most vendors have an affiliate program. Peppies makes that loop frictionless:
 
-### Other
-- **14-step How-to guide** built into the app
-- **Backup / restore** as a JSON file (all localStorage in one export)
+- **Save your vendor's referral** (name + code + link). A prominent **Shop Peptides** button appears on the home screen and opens the vendor in your browser.
+- **Share with friends** — generates a Peppies link with `?ref=...` baked in. When a new user opens it, the disclaimer screen pre-fills with your referral. Includes a counter of how many friends you've shared with.
+- **Personal link slot** — a second, private link just for you (for example, one a friend shared with you *after* you signed up). Never included when you share Peppies onward.
+
+### Quality of life
+- **14-step in-app How-to guide** explaining every feature
+- **JSON backup & restore** — export your whole app state as one file, import it on a new device or after clearing browser data
 - **Disclaimer onboarding** the first time you open it
-- **Installable as a PWA** on iOS and Android home screens
+- **Installable on iOS and Android** home screens — feels native after install
 
 ---
 
-## Stack
+## Tech stack
 
-- **React 18** + **TypeScript**
-- **Vite** (build + dev server, with PWA / service worker plugin)
+- **React 18** + **TypeScript** — strict mode
+- **Vite** — build, dev server, and `vite-plugin-pwa` for the service worker
 - **Tailwind CSS** + **shadcn/ui** primitives
-- **wouter** for routing
-- **framer-motion** for animations
-- **lucide-react** for icons
-- **react-query** for in-memory state caching where useful
-- **localStorage** for every piece of user data — no database, no API, no auth
+- **wouter** — tiny routing library
+- **framer-motion** — animations and sheet transitions
+- **lucide-react** — icons
+- **localStorage** — every piece of user data; no database, no API, no auth
 
-Monorepo managed with **pnpm workspaces**.
+Monorepo orchestrated with **pnpm workspaces**.
 
 ---
 
@@ -58,29 +66,30 @@ Monorepo managed with **pnpm workspaces**.
 ```
 .
 ├── artifacts/
-│   ├── peppies/              ← the actual app
+│   ├── peppies/              ← the app
 │   │   ├── src/
-│   │   │   ├── App.tsx
-│   │   │   ├── main.tsx
-│   │   │   ├── index.css
-│   │   │   ├── pages/        ← Home, Log, Calculator, History, Nutrition, Steps, Settings
-│   │   │   ├── components/   ← cards, sheets, dialogs, shadcn ui/
-│   │   │   ├── hooks/        ← useInjections, useAffiliate, useWeight, useSleep, ...
-│   │   │   ├── utils/        ← backup, affiliateShare, exportCsv, openFoodFacts, ...
-│   │   │   ├── data/         ← peptide reference data
+│   │   │   ├── App.tsx          routing + onboarding + referral intake
+│   │   │   ├── main.tsx         React mount
+│   │   │   ├── index.css        Tailwind base + dark theme
+│   │   │   ├── pages/           Home, Log, Calculator, History, Nutrition, Steps, Settings
+│   │   │   ├── components/      cards, sheets, dialogs, plus shadcn ui/
+│   │   │   ├── hooks/           useInjections, useAffiliate, useCycles, useWeight, …
+│   │   │   ├── utils/           backup, affiliateShare, exportCsv, openFoodFacts, …
+│   │   │   ├── data/            built-in peptide reference
 │   │   │   └── lib/
 │   │   ├── index.html
 │   │   ├── vite.config.ts
 │   │   ├── tsconfig.json
 │   │   └── package.json
-│   ├── api-server/           ← unused scaffold (kept for monorepo wiring)
-│   └── mockup-sandbox/       ← unused scaffold (kept for monorepo wiring)
+│   ├── api-server/           ← unused scaffold
+│   └── mockup-sandbox/       ← unused scaffold
 ├── package.json
 ├── pnpm-workspace.yaml
+├── LICENSE
 └── README.md
 ```
 
-> The `api-server` and `mockup-sandbox` folders are inert scaffolds from the monorepo template. Peppies itself uses neither — all the app code is under `artifacts/peppies/`.
+> `api-server` and `mockup-sandbox` are inert scaffolds from the monorepo template. Peppies itself uses neither — all app code lives under `artifacts/peppies/`.
 
 ---
 
@@ -93,15 +102,15 @@ pnpm install
 pnpm --filter @workspace/peppies run dev
 ```
 
-The app boots on the port assigned by the `PORT` environment variable (Vite reads it). Visit the URL printed in the terminal.
+The dev server binds to `$PORT` (Vite reads it). Open the URL printed in the terminal.
 
-To produce a production build:
+Production build:
 
 ```bash
 pnpm --filter @workspace/peppies run build
 ```
 
-To typecheck:
+Typecheck:
 
 ```bash
 cd artifacts/peppies && pnpm exec tsc --noEmit
@@ -112,19 +121,38 @@ cd artifacts/peppies && pnpm exec tsc --noEmit
 ## Data & privacy
 
 - **No backend.** Nothing leaves your browser unless you tap Share.
-- **No analytics.** No tracking pixels, no third-party scripts, no server logs of your activity.
-- **All data lives in localStorage** keyed by the `peppies_*` prefix.
-- **Backup** in Settings exports a single JSON file containing every `peppies_*` key. Restoring overwrites the same keys.
-- **Share** uses the native Web Share API where available (iMessage / WhatsApp / Mail / AirDrop), with a clipboard fallback.
+- **No analytics.** No tracking pixels, no third-party scripts, no server-side logs of your activity.
+- **All data lives in `localStorage`** under `peppies_*` keys.
+- **Backup** in Settings exports a single JSON file containing every `peppies_*` key. Restore overwrites the same keys.
+- **Share** uses the native Web Share API where available (iMessage, WhatsApp, Mail, AirDrop), with a clipboard fallback when it isn't.
+- **Your personal link is never shared.** Only your main affiliate info is included in shared referral links.
+
+---
+
+## Roadmap
+
+Rough sketch of what may come next. None of this is promised — Peppies is a personal project, shaped by what I actually need.
+
+- [ ] **Charts on the History page** — sparklines for weight, sleep, and adherence
+- [ ] **Multi-protocol view** — compare two cycles side by side
+- [ ] **Reminder schedules** — recurring daily / weekly injection reminders, not just end-of-cycle
+- [ ] **Photo log** — optional progress photos kept in IndexedDB
+- [ ] **Templates** — save a full protocol (peptide + dose + cadence) as a reusable template
+- [ ] **iCloud / Drive backup** — opt-in encrypted backup target so you don't have to manage JSON files manually
+- [ ] **Apple Health / Google Fit** read-only sync for weight and steps
+- [ ] **Localization** — at minimum metric/imperial toggle for weight, then proper i18n
+- [ ] **Print-friendly history** — a clean view to share with a healthcare provider
+
+If you'd like to suggest something, open an issue.
 
 ---
 
 ## Disclaimer
 
-Peppies is a personal logging tool, not medical advice. It is intended for adults who have already decided, in consultation with a qualified healthcare provider, to use peptides. The app does not prescribe, diagnose, or treat anything. Use at your own discretion.
+Peppies is a personal logging and reference tool. **It is not medical advice, not a medical device, and not a substitute for a qualified healthcare provider.** It does not prescribe, diagnose, or treat anything. Many peptides tracked in the app are research compounds not approved for human use. You are responsible for your own decisions.
 
 ---
 
 ## License
 
-Personal project — no public license is granted. If you'd like to use any of this, please get in touch first.
+[MIT](./LICENSE) — do what you want, no warranty, and please don't pretend the app is medical advice.
