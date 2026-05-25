@@ -1,5 +1,4 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "3q5OCFE_txCKgLj7Q0FSz"
@@ -24,3 +23,9 @@ id = "NbrufZDmRrYWbprhdunWw"
 uri = "file://attached_assets/generated_images/icon_option_4_no_letter.png"
 type = "image"
 title = "generated_image"
+
+[[outputs]]
+id = "9FlOOcu3HkaIjym1A7r7i"
+uri = "file://dist/peppies-project.zip"
+type = "unspecified"
+title = "Peppies project (zip)"
