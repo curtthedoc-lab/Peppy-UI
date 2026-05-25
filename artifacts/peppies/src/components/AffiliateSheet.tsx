@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { X, ExternalLink, Copy, Check, Trash2, Tag, Share2, Link2 } from "lucide-react";
+import { X, ExternalLink, Copy, Check, Trash2, Tag, Share2, Link2, Users, RotateCcw } from "lucide-react";
 import { useAffiliate, isValidUrl, normalizeUrl } from "@/hooks/useAffiliate";
 import { buildReferralLink, buildShareMessage } from "@/utils/affiliateShare";
 
 export function AffiliateSheet({ onClose }: { onClose: () => void }) {
-  const { affiliate, hasAffiliate, setAffiliate, clear } = useAffiliate();
+  const { affiliate, hasAffiliate, shareCount, setAffiliate, bumpShareCount, resetShareCount, clear } = useAffiliate();
   const [name, setName] = useState(affiliate.name);
   const [code, setCode] = useState(affiliate.code);
   const [url, setUrl] = useState(affiliate.url);
@@ -60,16 +60,18 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
           text: message,
           url: link,
         });
+        bumpShareCount();
         setShareStatus("shared");
         setTimeout(() => setShareStatus(""), 2000);
         return;
       } catch (err) {
-        // User cancelled — don't show error. Other errors fall through to clipboard.
+        // User cancelled — don't show error or bump counter. Other errors fall through to clipboard.
         if ((err as DOMException)?.name === "AbortError") return;
       }
     }
     try {
       await navigator.clipboard.writeText(`${message}`);
+      bumpShareCount();
       setShareStatus("copied");
       setTimeout(() => setShareStatus(""), 2200);
     } catch {
@@ -83,6 +85,7 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
     const link = buildReferralLink(affiliate);
     try {
       await navigator.clipboard.writeText(link);
+      bumpShareCount();
       setShareStatus("copied");
       setTimeout(() => setShareStatus(""), 2200);
     } catch {
@@ -243,13 +246,46 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
               <div className="w-9 h-9 rounded-xl bg-primary/15 text-primary flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Share2 size={15} strokeWidth={2.2} />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-[13.5px] font-semibold leading-tight">Share your referral</p>
                 <p className="text-[11.5px] text-muted-foreground/70 mt-1 leading-relaxed">
                   Send a Peppies link that auto-fills your code and link in the other person's onboarding.
                 </p>
               </div>
             </div>
+
+            {/* Share counter */}
+            <div
+              className="flex items-center justify-between gap-3 bg-primary/8 border border-primary/20 rounded-xl px-3.5 py-2.5"
+              data-testid="affiliate-sheet-share-count"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Users size={14} strokeWidth={2.3} className="text-primary flex-shrink-0" />
+                <p className="text-[12.5px] text-foreground/85 leading-snug">
+                  {shareCount === 0 ? (
+                    <>You haven't shared Peppies yet.</>
+                  ) : (
+                    <>
+                      You've shared Peppies with{" "}
+                      <span className="font-bold text-primary">{shareCount}</span>{" "}
+                      {shareCount === 1 ? "friend" : "friends"}
+                    </>
+                  )}
+                </p>
+              </div>
+              {shareCount > 0 && (
+                <button
+                  onClick={resetShareCount}
+                  className="text-[10.5px] font-semibold text-muted-foreground/60 hover:text-muted-foreground flex items-center gap-1 px-1.5 py-1 rounded-md flex-shrink-0"
+                  data-testid="button-reset-share-count"
+                  aria-label="Reset share count"
+                >
+                  <RotateCcw size={10} strokeWidth={2.3} />
+                  Reset
+                </button>
+              )}
+            </div>
+
             <div className="flex gap-2">
               <motion.button
                 whileTap={{ scale: 0.97 }}

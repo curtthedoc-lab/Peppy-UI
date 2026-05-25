@@ -4,22 +4,28 @@ export interface Affiliate {
   name: string;
   code: string;
   url: string;
+  shareCount: number;
 }
 
 const STORAGE_KEY = "peppies_affiliate";
 const EVENT = "peppies_affiliate_changed";
 
-const EMPTY: Affiliate = { name: "", code: "", url: "" };
+const EMPTY: Affiliate = { name: "", code: "", url: "", shareCount: 0 };
 
 function load(): Affiliate {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return EMPTY;
     const parsed = JSON.parse(raw) as Partial<Affiliate>;
+    const count =
+      typeof parsed.shareCount === "number" && isFinite(parsed.shareCount) && parsed.shareCount >= 0
+        ? Math.floor(parsed.shareCount)
+        : 0;
     return {
       name: typeof parsed.name === "string" ? parsed.name : "",
       code: typeof parsed.code === "string" ? parsed.code : "",
       url: typeof parsed.url === "string" ? parsed.url : "",
+      shareCount: count,
     };
   } catch {
     return EMPTY;
@@ -27,7 +33,8 @@ function load(): Affiliate {
 }
 
 function save(a: Affiliate) {
-  if (!a.name && !a.code && !a.url) {
+  // Treat as "no record" only when affiliate info AND counter are all zero.
+  if (!a.name && !a.code && !a.url && !a.shareCount) {
     localStorage.removeItem(STORAGE_KEY);
   } else {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(a));
@@ -67,14 +74,36 @@ export function useAffiliate() {
     };
   }, []);
 
-  const setAndSave = useCallback((next: Affiliate) => {
-    const cleaned: Affiliate = {
-      name: next.name.trim(),
-      code: next.code.trim(),
-      url: next.url.trim() ? normalizeUrl(next.url) : "",
-    };
-    setAffiliate(cleaned);
-    save(cleaned);
+  const setAndSave = useCallback(
+    (next: { name: string; code: string; url: string; shareCount?: number }) => {
+      setAffiliate((prev) => {
+        const cleaned: Affiliate = {
+          name: next.name.trim(),
+          code: next.code.trim(),
+          url: next.url.trim() ? normalizeUrl(next.url) : "",
+          shareCount: typeof next.shareCount === "number" ? next.shareCount : prev.shareCount,
+        };
+        save(cleaned);
+        return cleaned;
+      });
+    },
+    []
+  );
+
+  const bumpShareCount = useCallback(() => {
+    setAffiliate((prev) => {
+      const next: Affiliate = { ...prev, shareCount: (prev.shareCount ?? 0) + 1 };
+      save(next);
+      return next;
+    });
+  }, []);
+
+  const resetShareCount = useCallback(() => {
+    setAffiliate((prev) => {
+      const next: Affiliate = { ...prev, shareCount: 0 };
+      save(next);
+      return next;
+    });
   }, []);
 
   const clear = useCallback(() => {
@@ -84,5 +113,13 @@ export function useAffiliate() {
 
   const hasAffiliate = !!affiliate.url;
 
-  return { affiliate, hasAffiliate, setAffiliate: setAndSave, clear };
+  return {
+    affiliate,
+    hasAffiliate,
+    shareCount: affiliate.shareCount,
+    setAffiliate: setAndSave,
+    bumpShareCount,
+    resetShareCount,
+    clear,
+  };
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, ExternalLink, Plus, Copy, Check, Settings2, Tag, Link2, User } from "lucide-react";
+import { ShoppingBag, ExternalLink, Plus, Copy, Check, Settings2, Tag, Link2, Users } from "lucide-react";
 import { useAffiliate } from "@/hooks/useAffiliate";
 import { AffiliateSheet } from "@/components/AffiliateSheet";
 
@@ -13,7 +13,7 @@ function hostFromUrl(url: string): string {
 }
 
 export function ShopPeptidesButton() {
-  const { affiliate, hasAffiliate } = useAffiliate();
+  const { affiliate, hasAffiliate, shareCount } = useAffiliate();
   const [showSheet, setShowSheet] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
@@ -212,6 +212,25 @@ export function ShopPeptidesButton() {
         <p className="text-[10.5px] text-muted-foreground/50 text-center leading-relaxed -mt-1">
           Opens {host || "your referral link"} in your browser
         </p>
+
+        {shareCount > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25 }}
+            className="flex items-center justify-center gap-2 bg-primary/8 border border-primary/20 rounded-2xl px-4 py-3"
+            data-testid="affiliate-share-count"
+          >
+            <Users size={14} strokeWidth={2.3} className="text-primary flex-shrink-0" />
+            <p className="text-[12.5px] text-foreground/85 leading-snug text-center">
+              You've shared Peppies with{" "}
+              <span className="font-bold text-primary" data-testid="text-share-count">
+                {shareCount}
+              </span>{" "}
+              {shareCount === 1 ? "friend" : "friends"}
+            </p>
+          </motion.div>
+        )}
       </div>
 
       <AnimatePresence>
