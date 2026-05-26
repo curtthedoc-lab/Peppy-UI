@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { Plus, Trash2, Star, Pencil, Apple, ChevronLeft, ChevronRight } from "lucide-react";
-import { useNutrition, FoodEntry, MealType, NutritionGoals } from "@/hooks/useNutrition";
+import { useNutrition, FoodEntry, FavoriteItem, MealType, NutritionGoals } from "@/hooks/useNutrition";
 import { AddFoodSheet } from "@/components/AddFoodSheet";
 import { MacroRing } from "@/components/MacroRing";
 import { localDayKey, localDayKeyOffset } from "@/utils/localDate";
@@ -37,6 +37,8 @@ export function Nutrition() {
     updateEntry,
     deleteEntry,
     setGoals,
+    addCustomFavorite,
+    removeFavorite,
   } = useNutrition();
 
   const [selectedDate, setSelectedDate] = useState<string>(() => localDayKey());
@@ -48,6 +50,7 @@ export function Nutrition() {
     | { kind: "edit"; entry: FoodEntry }
   >({ kind: "closed" });
   const [showGoals, setShowGoals] = useState(false);
+  const [showAddFavorite, setShowAddFavorite] = useState(false);
 
   const dayEntries = useMemo(
     () => entries.filter((e) => localDayKey(e.date) === selectedDate),
@@ -79,7 +82,7 @@ export function Nutrition() {
     return grouped;
   }, [dayEntries]);
 
-  const handleAddFavorite = (fav: FoodEntry) => {
+  const handleAddFavorite = (fav: FavoriteItem) => {
     addEntry({
       name: fav.name,
       calories: fav.calories,
@@ -139,30 +142,39 @@ export function Nutrition() {
         )}
 
         {/* Favorites — only when viewing today */}
-        {isToday && favorites.length > 0 && (
+        {isToday && (
           <motion.section variants={itemVariants} className="flex flex-col gap-2.5">
-            <div className="flex items-center gap-2 px-1">
-              <Star size={13} strokeWidth={2.2} className="text-primary" />
-              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                Quick add
-              </h3>
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <Star size={13} strokeWidth={2.2} className="text-primary" />
+                <h3 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                  Quick add
+                </h3>
+              </div>
+              <span className="text-[10px] text-muted-foreground/50 italic">
+                swipe left to remove
+              </span>
             </div>
             <div className="flex flex-wrap gap-2">
               {favorites.map((fav) => (
-                <motion.button
+                <FavoriteChip
                   key={fav.id}
-                  whileTap={{ scale: 0.94 }}
-                  onClick={() => handleAddFavorite(fav)}
-                  className="bg-muted/60 hover:bg-muted border border-border/40 rounded-2xl px-3.5 py-2 flex items-center gap-2"
-                  data-testid={`favorite-${fav.name.toLowerCase().replace(/\s+/g, "-")}`}
-                >
-                  <Plus size={12} strokeWidth={2.4} className="text-primary" />
-                  <span className="text-[12.5px] font-semibold">{fav.name}</span>
-                  <span className="text-[11px] text-muted-foreground/60">
-                    {Math.round(fav.calories)}
-                  </span>
-                </motion.button>
+                  fav={fav}
+                  onAdd={() => handleAddFavorite(fav)}
+                  onRemove={() => removeFavorite(fav)}
+                />
               ))}
+              <motion.button
+                whileTap={{ scale: 0.94 }}
+                onClick={() => setShowAddFavorite(true)}
+                className="bg-card/60 hover:bg-muted/60 border border-dashed border-border/60 rounded-2xl px-3.5 py-2 flex items-center gap-1.5"
+                data-testid="button-add-favorite"
+              >
+                <Plus size={12} strokeWidth={2.4} className="text-primary" />
+                <span className="text-[12.5px] font-semibold text-primary/90">
+                  New favorite
+                </span>
+              </motion.button>
             </div>
           </motion.section>
         )}
@@ -249,6 +261,15 @@ export function Nutrition() {
             onSave={(g) => {
               setGoals(g);
               setShowGoals(false);
+            }}
+          />
+        )}
+        {showAddFavorite && (
+          <CustomFavoriteSheet
+            onClose={() => setShowAddFavorite(false)}
+            onSave={(data) => {
+              addCustomFavorite(data);
+              setShowAddFavorite(false);
             }}
           />
         )}
@@ -412,6 +433,216 @@ function GoalsSheet({
             data-testid="button-save-goals"
           >
             Save
+          </motion.button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// --- Favorite chip with swipe-left to remove ---
+
+function FavoriteChip({
+  fav,
+  onAdd,
+  onRemove,
+}: {
+  fav: FavoriteItem;
+  onAdd: () => void;
+  onRemove: () => void;
+}) {
+  const [dragging, setDragging] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
+  const handleDragEnd = (_e: unknown, info: PanInfo) => {
+    setDragging(false);
+    if (info.offset.x < -50 || info.velocity.x < -400) {
+      setRemoving(true);
+      setTimeout(onRemove, 180);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div className="absolute inset-y-0 right-0 w-12 bg-destructive/20 rounded-2xl flex items-center justify-center pointer-events-none">
+        <Trash2 size={12} className="text-destructive" strokeWidth={2.2} />
+      </div>
+      <motion.button
+        drag="x"
+        dragConstraints={{ left: -70, right: 0 }}
+        dragElastic={0.15}
+        dragMomentum={false}
+        onDragStart={() => setDragging(true)}
+        onDragEnd={handleDragEnd}
+        animate={removing ? { x: -220, opacity: 0 } : { x: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 320, damping: 32 }}
+        onClick={() => {
+          if (!dragging) onAdd();
+        }}
+        className="relative bg-muted/60 hover:bg-muted border border-border/40 rounded-2xl px-3.5 py-2 flex items-center gap-2 touch-pan-y cursor-pointer"
+        data-testid={`favorite-${fav.name.toLowerCase().replace(/\s+/g, "-")}`}
+      >
+        {fav.kind === "custom" ? (
+          <Star
+            size={11}
+            className="text-primary fill-primary"
+            strokeWidth={0}
+          />
+        ) : (
+          <Plus size={12} strokeWidth={2.4} className="text-primary" />
+        )}
+        <span className="text-[12.5px] font-semibold">{fav.name}</span>
+        <span className="text-[11px] text-muted-foreground/60">
+          {Math.round(fav.calories)}
+        </span>
+      </motion.button>
+    </div>
+  );
+}
+
+// --- Custom favorite sheet ---
+
+function CustomFavoriteSheet({
+  onClose,
+  onSave,
+}: {
+  onClose: () => void;
+  onSave: (data: {
+    name: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    serving: string;
+  }) => void;
+}) {
+  const [draft, setDraft] = useState({
+    name: "",
+    serving: "",
+    calories: "",
+    protein: "",
+    carbs: "",
+    fat: "",
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  const update = (key: keyof typeof draft, value: string) => {
+    setError(null);
+    if (key === "name" || key === "serving") {
+      setDraft((d) => ({ ...d, [key]: value }));
+      return;
+    }
+    if (value === "" || /^\d{0,5}(\.\d{0,2})?$/.test(value)) {
+      setDraft((d) => ({ ...d, [key]: value }));
+    }
+  };
+
+  const handleSave = () => {
+    const name = draft.name.trim();
+    if (!name) {
+      setError("Please enter a name");
+      return;
+    }
+    onSave({
+      name,
+      serving: draft.serving.trim(),
+      calories: parseFloat(draft.calories) || 0,
+      protein: parseFloat(draft.protein) || 0,
+      carbs: parseFloat(draft.carbs) || 0,
+      fat: parseFloat(draft.fat) || 0,
+    });
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm px-4 pb-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: 80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 80, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 } as const}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-[430px] bg-card border border-border/60 rounded-3xl p-5 flex flex-col gap-4"
+        data-testid="sheet-custom-favorite"
+      >
+        <div className="flex items-center gap-2">
+          <Star size={16} className="text-primary fill-primary" strokeWidth={0} />
+          <h2 className="text-[17px] font-bold">New favorite</h2>
+        </div>
+        <p className="text-[12px] text-muted-foreground/70 leading-relaxed -mt-2">
+          Save a food you eat often. It stays in Quick Add even if you haven't logged it recently.
+        </p>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+            Name
+          </label>
+          <input
+            value={draft.name}
+            onChange={(e) => update("name", e.target.value)}
+            placeholder="e.g. Morning protein shake"
+            className="bg-muted/60 rounded-xl px-3.5 py-3 w-full text-[14px] outline-none focus:ring-2 focus:ring-primary/40"
+            data-testid="input-favorite-name"
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+            Serving (optional)
+          </label>
+          <input
+            value={draft.serving}
+            onChange={(e) => update("serving", e.target.value)}
+            placeholder="e.g. 1 scoop, 1 cup, 100g"
+            className="bg-muted/60 rounded-xl px-3.5 py-3 w-full text-[14px] outline-none focus:ring-2 focus:ring-primary/40"
+            data-testid="input-favorite-serving"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {(["calories", "protein", "carbs", "fat"] as const).map((k) => (
+            <div key={k} className="flex flex-col gap-1.5">
+              <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">
+                {k === "calories" ? "Calories" : `${k.charAt(0).toUpperCase() + k.slice(1)} (g)`}
+              </label>
+              <input
+                inputMode="decimal"
+                value={draft[k]}
+                onChange={(e) => update(k, e.target.value)}
+                placeholder="0"
+                className="bg-muted/60 rounded-xl px-3.5 py-3 w-full text-[14px] outline-none focus:ring-2 focus:ring-primary/40"
+                data-testid={`input-favorite-${k}`}
+              />
+            </div>
+          ))}
+        </div>
+
+        {error && (
+          <p className="text-[12px] text-destructive font-semibold" data-testid="text-favorite-error">
+            {error}
+          </p>
+        )}
+
+        <div className="flex gap-2 pt-1">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-muted text-muted-foreground font-semibold text-[13px] py-3 rounded-2xl"
+            data-testid="button-cancel-favorite"
+          >
+            Cancel
+          </button>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={handleSave}
+            className="flex-1 bg-primary text-primary-foreground font-semibold text-[13px] py-3 rounded-2xl"
+            data-testid="button-save-favorite"
+          >
+            Save favorite
           </motion.button>
         </div>
       </motion.div>
