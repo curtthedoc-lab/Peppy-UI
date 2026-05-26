@@ -60,6 +60,22 @@ function toDraft(initial: Partial<FoodEntry> | undefined, defaultMeal: MealType)
 
 const round = (v: number) => Math.round(v * 10) / 10;
 
+// Multiply the leading number in a serving label by `factor`.
+// "1 fried slices" × 2 → "2 fried slices"
+// "100 g" × 1.5 → "150 g"
+// "1 cup (240ml)" × 2 → "2 cup (240ml)"  (only the leading number scales)
+// If no leading number, prepends "×N " to make the multiplier visible.
+function scaleServingLabel(label: string, factor: number): string {
+  if (factor === 1) return label;
+  const trimmed = label.trim();
+  if (!trimmed) return trimmed;
+  const m = trimmed.match(/^(\d+(?:\.\d+)?)(\s*)(.*)$/);
+  if (!m) return `×${round(factor)} ${trimmed}`;
+  const n = parseFloat(m[1]);
+  const scaledN = round(n * factor);
+  return `${scaledN}${m[2] || " "}${m[3]}`;
+}
+
 export function AddFoodSheet({
   initial,
   defaultMeal = "breakfast",
@@ -87,7 +103,20 @@ export function AddFoodSheet({
 
   useEffect(() => {
     setDraft(toDraft(initial, defaultMeal));
-  }, [initial, defaultMeal]);
+    // In edit mode, seed the scaling base from the existing entry so the
+    // × Servings counter is available immediately. Bumping × scales both the
+    // macros and the leading number in the serving label.
+    if (isEdit && initial) {
+      const c = initial.calories ?? 0;
+      const p = initial.protein ?? 0;
+      const cb = initial.carbs ?? 0;
+      const f = initial.fat ?? 0;
+      const s = initial.serving ?? "";
+      setBase({ calories: c, protein: p, carbs: cb, fat: f, serving: s });
+      setActiveLookup(null);
+      setQuantity("1");
+    }
+  }, [initial, defaultMeal, isEdit]);
 
   // Cleanup any pending search on unmount
   useEffect(() => {
@@ -250,13 +279,14 @@ export function AddFoodSheet({
     const protein = scaled ? scaled.protein : parseFloat(draft.protein) || 0;
     const carbs = scaled ? scaled.carbs : parseFloat(draft.carbs) || 0;
     const fat = scaled ? scaled.fat : parseFloat(draft.fat) || 0;
+    const serving = (scaled && base ? scaleServingLabel(base.serving, qtyNum) : draft.serving).trim();
     onSave({
       name,
       calories,
       protein,
       carbs,
       fat,
-      serving: draft.serving.trim(),
+      serving,
       meal: draft.meal,
     });
     onClose();
@@ -421,8 +451,11 @@ export function AddFoodSheet({
           <Field label="Serving">
             <input
               type="text"
-              value={draft.serving}
-              onChange={(e) => update("serving", e.target.value)}
+              value={scaled && base ? scaleServingLabel(base.serving, qtyNum) : draft.serving}
+              onChange={(e) => {
+                if (scaled) switchToManualEdit();
+                update("serving", e.target.value);
+              }}
               placeholder="e.g. 1 cup, 100g, 2 scoops"
               className="bg-muted/60 rounded-xl px-3.5 py-3 w-full text-[14px] outline-none focus:ring-2 focus:ring-primary/40"
               data-testid="input-food-serving"
