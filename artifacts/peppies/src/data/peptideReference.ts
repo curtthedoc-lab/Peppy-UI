@@ -292,6 +292,17 @@ export const PEPTIDE_REFERENCE: PeptideRef[] = [
     source: "peptidedosages.com",
   },
   {
+    name: "NAD+",
+    vialSizes: "100 mg, 500 mg, 1000 mg",
+    doseRange: "50–300 mg/day subcutaneous (typical maintenance 100 mg/day); IV/IM protocols vary",
+    bacWaterMl: 5,
+    vialMg: 500,
+    concentration: "100 mg/mL",
+    perUnit: "≈ 1 mg per unit",
+    notes: "Subcutaneous injection of NAD+ can sting — inject slowly (over 30–60 seconds) and consider splitting the dose. Some users prefer to dilute further or rotate sites frequently. Reconstituted vial may have a slight pink/red tint, which is normal. Store reconstituted vial at 2–8 °C; use within 14–30 days. Avoid freeze-thaw cycles. Loading protocols often run 5–10 days at a higher dose, then drop to maintenance.",
+    source: "peptidedosages.com",
+  },
+  {
     name: "KLOW",
     vialSizes: "80 mg (10 mg KPV + 10 mg BPC-157 + 10 mg TB-500 + 50 mg GHK-Cu)",
     doseRange: "200–400 mcg BPC-157 equivalent/day (≈ 1,600–3,200 mcg total blend)",

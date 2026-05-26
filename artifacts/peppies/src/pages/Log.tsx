@@ -19,6 +19,7 @@ const PEPTIDES = [
   "KPV",
   "PT-141",
   "Melanotan II",
+  "NAD+",
 ];
 
 const UNITS = ["mcg", "mg", "IU", "units"];
