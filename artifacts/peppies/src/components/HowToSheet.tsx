@@ -18,6 +18,9 @@ import {
   Smartphone,
   Moon,
   ShoppingBag,
+  Star,
+  CalendarDays,
+  Pencil,
 } from "lucide-react";
 
 type Step = {
@@ -67,7 +70,7 @@ const STEPS: Step[] = [
     icon: Apple,
     title: "7. Log food & macros",
     body:
-      "Tap Nutrition in the bottom bar to log meals. Add foods by name with calories, protein, carbs, and fat. The day view shows totals against your goals. Set or edit your daily targets from the Nutrition page.",
+      "Tap Nutrition in the bottom bar. Tap Add Food to enter a meal. Start typing the food name and Peppies searches the USDA database — pick a result to auto-fill calories, protein, carbs, and fat. If the food has both a labeled serving and per-100g info, you'll see a Basis picker so you can choose which one to use. Use the × Servings counter to scale up if you ate more than one. You can also enter everything by hand.",
   },
   {
     icon: ScanLine,
@@ -76,8 +79,26 @@ const STEPS: Step[] = [
       "Inside the Add Food sheet, tap Scan Barcode and point your phone at a packaged food's barcode. Peppies looks up the product and fills in the macros automatically. You can adjust the serving size before saving. First time you scan, allow camera access when iPhone asks.",
   },
   {
+    icon: Pencil,
+    title: "9. Edit or delete a food entry",
+    body:
+      "On the Nutrition page, tap any food row to reopen it. The × Servings counter starts at 1 — bump it up or down and the macros and serving label scale together (so '1 fried slices' becomes '2 fried slices'). Tap Save changes when done. To remove an entry, swipe it left and the red trash icon will delete it.",
+  },
+  {
+    icon: CalendarDays,
+    title: "10. View past days & switch macro view",
+    body:
+      "At the top of the Nutrition page is a day pager with < and > arrows — tap them to look at previous days. Tap the date in the middle to jump back to Today. Below the date is a swipeable summary card: swipe left or right (or tap the dots) to flip between the Rings view (calories + macro donuts) and the Bars view (each macro as a progress bar). Bars are color-coded: blue means more to go, green means goal met, red means you're over.",
+  },
+  {
+    icon: Star,
+    title: "11. Quick Add favorites",
+    body:
+      "Foods you log often automatically appear as Quick Add chips at the top of Nutrition — one tap re-logs them. To save your own, tap + New favorite, fill in the name and macros, and it stays in Quick Add forever (custom ones show a filled star). Don't want a chip there? Swipe it left to remove it — auto-suggestions stay hidden, custom ones are deleted. Quick Add only shows when you're viewing Today.",
+  },
+  {
     icon: Footprints,
-    title: "9. Track steps and walks",
+    title: "12. Track steps and walks",
     body:
       "Tap the Steps card on Home, then Start Walking. Peppies uses your phone's motion sensors to count steps and estimate distance + calories. Flip on Outdoor walk mode to use GPS for more accurate distance and pace. Allow Motion & Orientation Access when iPhone asks.",
   },
@@ -89,33 +110,33 @@ const STEPS: Step[] = [
   },
   {
     icon: Moon,
-    title: "10. Log your sleep",
+    title: "13. Log your sleep",
     body:
       "Tap the Sleep card on Home to log how many hours you slept and rate the quality from Poor to Great. Use the quick toggle for Last night or Night before. Tap '+ Add bedtime, wake time, notes' to enter a bedtime and wake time and Peppies will calculate the hours for you. Only one entry per night — logging the same night again replaces the previous one.",
   },
   {
     icon: Clock,
-    title: "11. Review your history",
+    title: "14. Review your history",
     body:
       "Tap History to see every injection and calculation, grouped by day. Filter by peptide to spot patterns over time. Tap any entry for full detail.",
   },
   {
     icon: Bell,
-    title: "12. Turn on cycle reminders (optional)",
+    title: "15. Turn on cycle reminders (optional)",
     body:
       "In Settings, enable Cycle Reminders to get a browser notification when an active cycle ends. Works best when Peppies is installed to your Home Screen.",
   },
   {
     icon: ShoppingBag,
-    title: "13. Save and share your vendor referral",
+    title: "16. Save and share your vendor referral",
     body:
       "Settings → Shop & Resources → Affiliate / Referral. Save the name, code, and link of the peptide vendor that referred you. Once saved, a Shop Peptides button appears on the home screen — tap it to open the link in your browser. To pass it to a friend, tap Share inside the Affiliate sheet — it sends a special Peppies link that auto-fills your code and link during their onboarding. There's also a separate Personal Link slot — use it for a second vendor link you want to keep handy (for example, one a friend shared with you after you signed up). The personal link is just for you and is never included when you share Peppies.",
   },
   {
     icon: Download,
-    title: "14. Back up your data",
+    title: "17. Back up your data",
     body:
-      "All data stays on this device only — there's no cloud. Use Settings → Export Data regularly and save the file to iCloud Drive or email it to yourself. To restore on a new phone, use Import Data. Backups include injections, cycles, weight, hydration, nutrition, steps, sleep, profile, and preferences.",
+      "All data stays on this device only — there's no cloud. Use Settings → Export Data regularly and save the file to iCloud Drive or email it to yourself. To restore on a new phone, use Import Data. Backups include injections, cycles, weight, hydration, nutrition (including your custom favorites), steps, sleep, profile, and preferences.",
   },
 ];
 
