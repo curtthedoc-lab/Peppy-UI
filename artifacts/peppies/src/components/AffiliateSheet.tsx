@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { X, ExternalLink, Copy, Check, Trash2, Tag, Share2, Link2, Users, RotateCcw, User } from "lucide-react";
+import { X, ExternalLink, Copy, Check, Trash2, Tag, Share2, Link2, Users, RotateCcw, User, LayoutDashboard } from "lucide-react";
 import { useAffiliate, isValidUrl, normalizeUrl } from "@/hooks/useAffiliate";
 import { buildReferralLink, buildShareMessage } from "@/utils/affiliateShare";
 
@@ -9,11 +9,15 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
     affiliate,
     hasAffiliate,
     hasPersonal,
+    hasDashboard,
     personal,
+    dashboard,
     shareCount,
     setAffiliate,
     setPersonal,
     clearPersonal,
+    setDashboard,
+    clearDashboard,
     bumpShareCount,
     resetShareCount,
     clear,
@@ -34,6 +38,13 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
   const [pSaved, setPSaved] = useState(false);
   const [confirmClearP, setConfirmClearP] = useState(false);
 
+  // Affiliate Dashboard link form state
+  const [dName, setDName] = useState(dashboard.name);
+  const [dUrl, setDUrl] = useState(dashboard.url);
+  const [dError, setDError] = useState("");
+  const [dSaved, setDSaved] = useState(false);
+  const [confirmClearD, setConfirmClearD] = useState(false);
+
   useEffect(() => {
     setName(affiliate.name);
     setCode(affiliate.code);
@@ -44,6 +55,26 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
     setPName(personal.name);
     setPUrl(personal.url);
   }, [personal.name, personal.url]);
+
+  useEffect(() => {
+    setDName(dashboard.name);
+    setDUrl(dashboard.url);
+  }, [dashboard.name, dashboard.url]);
+
+  const handleSaveDashboard = () => {
+    if (!dUrl.trim()) {
+      setDError("A link is required");
+      return;
+    }
+    if (!isValidUrl(dUrl)) {
+      setDError("That doesn't look like a valid link");
+      return;
+    }
+    setDashboard({ name: dName, url: dUrl });
+    setDError("");
+    setDSaved(true);
+    setTimeout(() => setDSaved(false), 1500);
+  };
 
   const handleSavePersonal = () => {
     if (!pUrl.trim()) {
@@ -474,6 +505,121 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
+        {/* Affiliate Dashboard — separate slot */}
+        <div className="border-t border-border/40 pt-5 flex flex-col gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-muted text-foreground/70 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <LayoutDashboard size={15} strokeWidth={2.2} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13.5px] font-semibold leading-tight">Affiliate Dashboard</p>
+              <p className="text-[11.5px] text-muted-foreground/70 mt-1 leading-relaxed">
+                A direct link to your vendor's affiliate dashboard, where you check your own earnings and stats. Just for you — not included when you share Peppies.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground/70 mb-1.5 block">
+              Label (optional)
+            </label>
+            <input
+              value={dName}
+              onChange={(e) => setDName(e.target.value)}
+              placeholder="e.g. R3vive Labs dashboard"
+              className="w-full bg-background border border-border/60 rounded-2xl px-4 py-3 text-[14px] placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
+              data-testid="input-dashboard-name"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] font-semibold text-muted-foreground/70 mb-1.5 block">
+              Dashboard link <span className="text-destructive/70">*</span>
+            </label>
+            <input
+              value={dUrl}
+              onChange={(e) => {
+                setDUrl(e.target.value);
+                setDError("");
+              }}
+              onBlur={() => {
+                if (dUrl.trim()) setDUrl(normalizeUrl(dUrl));
+              }}
+              placeholder="https://r3vivelabs.com/affiliate/dashboard"
+              inputMode="url"
+              autoCapitalize="off"
+              autoCorrect="off"
+              className="w-full bg-background border border-border/60 rounded-2xl px-4 py-3 text-[14px] placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
+              data-testid="input-dashboard-url"
+            />
+          </div>
+          {dError && <p className="text-[12px] text-destructive">{dError}</p>}
+
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={handleSaveDashboard}
+            disabled={!dUrl.trim()}
+            className="w-full bg-muted text-foreground font-semibold text-[14px] py-3.5 rounded-2xl disabled:opacity-40 tracking-wide flex items-center justify-center gap-2"
+            data-testid="button-save-dashboard"
+          >
+            {dSaved ? (
+              <>
+                <Check size={14} strokeWidth={2.4} />
+                Saved
+              </>
+            ) : (
+              "Save dashboard link"
+            )}
+          </motion.button>
+
+          {hasDashboard && dashboard.url && (
+            <a
+              href={dashboard.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-background border border-border/60 text-foreground font-semibold text-[13.5px] py-3 rounded-2xl tracking-wide flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+              data-testid="link-open-dashboard"
+            >
+              <ExternalLink size={13} strokeWidth={2.2} />
+              Open dashboard
+            </a>
+          )}
+
+          {hasDashboard && (
+            <div className="flex flex-col items-center">
+              {!confirmClearD ? (
+                <button
+                  onClick={() => setConfirmClearD(true)}
+                  className="text-[11.5px] text-muted-foreground/70 flex items-center gap-1.5 px-3 py-1.5"
+                  data-testid="button-clear-dashboard"
+                >
+                  <Trash2 size={10.5} strokeWidth={2.2} />
+                  Remove dashboard link
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      clearDashboard();
+                      setConfirmClearD(false);
+                      setDName("");
+                      setDUrl("");
+                    }}
+                    className="text-[12px] font-semibold bg-destructive/15 text-destructive px-3.5 py-2 rounded-xl"
+                  >
+                    Yes, remove
+                  </button>
+                  <button
+                    onClick={() => setConfirmClearD(false)}
+                    className="text-[12px] font-semibold bg-muted text-muted-foreground px-3.5 py-2 rounded-xl"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Clear main affiliate */}
         {hasAffiliate && (
           <div className="flex flex-col items-center pt-1">
@@ -497,6 +643,8 @@ export function AffiliateSheet({ onClose }: { onClose: () => void }) {
                     setUrl("");
                     setPName("");
                     setPUrl("");
+                    setDName("");
+                    setDUrl("");
                   }}
                   className="text-[12px] font-semibold bg-destructive/15 text-destructive px-3.5 py-2 rounded-xl"
                 >
