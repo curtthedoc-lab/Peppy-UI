@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, ExternalLink, Plus, Copy, Check, Settings2, Tag, Link2, Users, User } from "lucide-react";
+import { ShoppingBag, ExternalLink, Plus, Copy, Check, Settings2, Tag, Link2, Users, User, LayoutDashboard } from "lucide-react";
 import { useAffiliate } from "@/hooks/useAffiliate";
 import { AffiliateSheet } from "@/components/AffiliateSheet";
 
@@ -13,12 +13,13 @@ function hostFromUrl(url: string): string {
 }
 
 export function ShopPeptidesButton() {
-  const { affiliate, hasAffiliate, hasPersonal, personal, shareCount } = useAffiliate();
+  const { affiliate, hasAffiliate, hasPersonal, hasDashboard, personal, dashboard, shareCount } = useAffiliate();
   const [showSheet, setShowSheet] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
   const personalHost = hasPersonal ? hostFromUrl(personal.url) : "";
+  const dashboardHost = hasDashboard ? hostFromUrl(dashboard.url) : "";
 
   // Reusable personal-link block (renders only when set).
   const personalBlock = hasPersonal ? (
@@ -59,6 +60,50 @@ export function ShopPeptidesButton() {
       >
         <ShoppingBag size={13} strokeWidth={2.3} />
         Shop with personal link
+        <ExternalLink size={12} strokeWidth={2.2} className="opacity-80" />
+      </a>
+    </div>
+  ) : null;
+
+  // Reusable affiliate-dashboard block (renders only when set).
+  const dashboardBlock = hasDashboard ? (
+    <div
+      className="bg-background border border-border/50 rounded-2xl p-4 flex flex-col gap-3"
+      data-testid="card-dashboard-link"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-xl bg-muted text-foreground/70 flex items-center justify-center flex-shrink-0">
+            <LayoutDashboard size={13} strokeWidth={2.3} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold text-muted-foreground/60 tracking-widest uppercase leading-none mb-1">
+              Affiliate Dashboard
+            </p>
+            <p
+              className="text-[13.5px] font-semibold leading-tight truncate"
+              data-testid="text-dashboard-name"
+            >
+              {dashboard.name || dashboardHost}
+            </p>
+            {dashboard.name && (
+              <p className="text-[11px] text-muted-foreground/60 truncate mt-0.5" title={dashboard.url}>
+                {dashboardHost}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+      <a
+        href={dashboard.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ touchAction: "manipulation" as const, WebkitTapHighlightColor: "transparent" }}
+        className="w-full bg-muted text-foreground font-semibold text-[13.5px] py-3 rounded-xl tracking-wide flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
+        data-testid="link-open-dashboard-home"
+      >
+        <LayoutDashboard size={13} strokeWidth={2.3} />
+        Open dashboard
         <ExternalLink size={12} strokeWidth={2.2} className="opacity-80" />
       </a>
     </div>
@@ -113,6 +158,7 @@ export function ShopPeptidesButton() {
           </motion.button>
 
           {personalBlock}
+          {dashboardBlock}
         </div>
 
         <AnimatePresence>
@@ -262,6 +308,7 @@ export function ShopPeptidesButton() {
         </p>
 
         {personalBlock}
+        {dashboardBlock}
 
         {shareCount > 0 && (
           <motion.div
