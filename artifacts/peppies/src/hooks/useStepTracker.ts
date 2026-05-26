@@ -19,8 +19,10 @@ export interface DailyStepRecord {
 
 export type DailyStepMap = Record<string, DailyStepRecord>;
 
+import { localDayKey } from "@/utils/localDate";
+
 function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localDayKey();
 }
 
 function loadAll(): DailyStepMap {

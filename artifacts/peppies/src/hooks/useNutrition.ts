@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { uuid } from "@/utils/uuid";
+import { localDayKey } from "@/utils/localDate";
 
 export type MealType = "breakfast" | "lunch" | "dinner" | "snacks";
 
@@ -34,7 +35,7 @@ const DEFAULT_GOALS: NutritionGoals = {
   fat: 65,
 };
 
-export const todayKey = () => new Date().toISOString().slice(0, 10);
+export const todayKey = () => localDayKey();
 
 function loadEntries(): FoodEntry[] {
   try {
@@ -121,7 +122,7 @@ export function useNutrition() {
   }, []);
 
   const today = todayKey();
-  const todayEntries = entries.filter((e) => e.date.slice(0, 10) === today);
+  const todayEntries = entries.filter((e) => localDayKey(e.date) === today);
 
   const totals = todayEntries.reduce(
     (acc, e) => ({

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { X, Trash2, Moon } from "lucide-react";
+import { localDayKey, localDayKeyOffset } from "@/utils/localDate";
 import {
   useSleep,
   computeSleepHours,
@@ -31,7 +32,7 @@ function formatHours(h: number): string {
 }
 
 function todayISODate(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localDayKey();
 }
 
 function SleepHistoryRow({
@@ -191,9 +192,7 @@ export function SleepSheet({ onClose }: { onClose: () => void }) {
           <div className="flex bg-muted rounded-2xl p-1 gap-1">
             {(() => {
               const today = todayISODate();
-              const y = new Date();
-              y.setDate(y.getDate() - 1);
-              const yesterday = y.toISOString().slice(0, 10);
+              const yesterday = localDayKeyOffset(1);
               return (
                 <>
                   <button

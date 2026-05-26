@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { localDayKey } from "@/utils/localDate";
 
 interface HydrationState {
   date: string;
@@ -8,7 +9,7 @@ interface HydrationState {
 
 const STORAGE_KEY = "peppies_hydration";
 const EVENT = "peppies_hydration_changed";
-const TODAY = () => new Date().toISOString().slice(0, 10);
+const TODAY = () => localDayKey();
 
 function load(): HydrationState {
   try {

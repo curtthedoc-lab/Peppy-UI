@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { localDayKey } from "@/utils/localDate";
 import { PenLine, Scale, Droplets, Flame, CalendarDays, FlaskConical, Activity, Plus, Minus, TrendingDown, TrendingUp, Footprints, Moon } from "lucide-react";
 import { Link } from "wouter";
 import { useInjections, Injection } from "@/hooks/useInjections";
@@ -265,7 +266,7 @@ function StepsCard() {
   try {
     if (raw) {
       const map = JSON.parse(raw) as Record<string, { steps?: number; distanceM?: number }>;
-      const key = new Date().toISOString().slice(0, 10);
+      const key = localDayKey();
       todaySteps = map[key]?.steps ?? 0;
       todayDistanceM = map[key]?.distanceM ?? 0;
     }

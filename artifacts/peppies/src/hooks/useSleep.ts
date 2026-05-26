@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { uuid } from "@/utils/uuid";
+import { localDayKey } from "@/utils/localDate";
 
 export interface SleepEntry {
   id: string;
@@ -73,7 +74,7 @@ export function useSleep() {
       opts?: { forDate?: string; bedtime?: string; wakeTime?: string; notes?: string },
     ) => {
       const forDate =
-        opts?.forDate ?? new Date().toISOString().slice(0, 10);
+        opts?.forDate ?? localDayKey();
       const entry: SleepEntry = {
         id: uuid(),
         date: new Date().toISOString(),
