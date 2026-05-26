@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
-import { Plus, Trash2, Star, Pencil, Apple } from "lucide-react";
+import { Plus, Trash2, Star, Pencil, Apple, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNutrition, FoodEntry, MealType, NutritionGoals } from "@/hooks/useNutrition";
 import { AddFoodSheet } from "@/components/AddFoodSheet";
 import { MacroRing } from "@/components/MacroRing";
+import { localDayKey, localDayKeyOffset } from "@/utils/localDate";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -29,8 +30,7 @@ const MACRO_COLORS = {
 
 export function Nutrition() {
   const {
-    todayEntries,
-    totals,
+    entries,
     goals,
     favorites,
     addEntry,
@@ -39,6 +39,9 @@ export function Nutrition() {
     setGoals,
   } = useNutrition();
 
+  const [selectedDate, setSelectedDate] = useState<string>(() => localDayKey());
+  const isToday = selectedDate === localDayKey();
+
   const [sheetState, setSheetState] = useState<
     | { kind: "closed" }
     | { kind: "add"; meal: MealType }
@@ -46,9 +49,24 @@ export function Nutrition() {
   >({ kind: "closed" });
   const [showGoals, setShowGoals] = useState(false);
 
-  const calRatio = Math.min(totals.calories / Math.max(goals.calories, 1), 1.2);
-  const calOver = totals.calories > goals.calories;
-  const calRemaining = Math.max(goals.calories - totals.calories, 0);
+  const dayEntries = useMemo(
+    () => entries.filter((e) => localDayKey(e.date) === selectedDate),
+    [entries, selectedDate],
+  );
+
+  const totals = useMemo(
+    () =>
+      dayEntries.reduce(
+        (acc, e) => ({
+          calories: acc.calories + e.calories,
+          protein: acc.protein + e.protein,
+          carbs: acc.carbs + e.carbs,
+          fat: acc.fat + e.fat,
+        }),
+        { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      ),
+    [dayEntries],
+  );
 
   const entriesByMeal = useMemo(() => {
     const grouped: Record<MealType, FoodEntry[]> = {
@@ -57,9 +75,9 @@ export function Nutrition() {
       dinner: [],
       snacks: [],
     };
-    for (const e of todayEntries) grouped[e.meal].push(e);
+    for (const e of dayEntries) grouped[e.meal].push(e);
     return grouped;
-  }, [todayEntries]);
+  }, [dayEntries]);
 
   const handleAddFavorite = (fav: FoodEntry) => {
     addEntry({
@@ -81,90 +99,47 @@ export function Nutrition() {
         animate="show"
         className="px-5 pt-6 pb-6 flex flex-col gap-5"
       >
-        {/* Daily summary */}
-        <motion.div
-          variants={itemVariants}
-          className="bg-card border border-border/60 rounded-3xl p-5 flex flex-col gap-4"
-          data-testid="card-daily-summary"
-        >
-          <div className="flex items-baseline justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
-                Today
-              </p>
-              <div className="flex items-baseline gap-1.5 mt-1">
-                <span
-                  className="text-[32px] font-bold tracking-[-0.04em] leading-none"
-                  data-testid="text-calories-eaten"
-                >
-                  {Math.round(totals.calories).toLocaleString()}
-                </span>
-                <span className="text-[14px] text-muted-foreground/70 font-medium">
-                  / {goals.calories.toLocaleString()} cal
-                </span>
-              </div>
-              <p className="text-[12px] text-muted-foreground/70 mt-1">
-                {calOver
-                  ? `${Math.round(totals.calories - goals.calories).toLocaleString()} over goal`
-                  : `${Math.round(calRemaining).toLocaleString()} remaining`}
-              </p>
-            </div>
-            <button
-              onClick={() => setShowGoals(true)}
-              className="text-[11px] font-semibold text-primary/80"
-              data-testid="button-edit-goals"
-            >
-              Edit goals
-            </button>
-          </div>
-
-          {/* Calorie progress bar */}
-          <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(calRatio, 1) * 100}%` }}
-              transition={{ type: "spring", stiffness: 120, damping: 22 }}
-              className={`h-full rounded-full ${calOver ? "bg-destructive" : "bg-primary"}`}
-            />
-          </div>
-
-          {/* Macro rings */}
-          <div className="flex items-center justify-around pt-1">
-            <MacroRing
-              value={totals.protein}
-              goal={goals.protein}
-              label="Protein"
-              color={MACRO_COLORS.protein}
-            />
-            <MacroRing
-              value={totals.carbs}
-              goal={goals.carbs}
-              label="Carbs"
-              color={MACRO_COLORS.carbs}
-            />
-            <MacroRing
-              value={totals.fat}
-              goal={goals.fat}
-              label="Fat"
-              color={MACRO_COLORS.fat}
-            />
-          </div>
+        {/* Date pager */}
+        <motion.div variants={itemVariants}>
+          <DatePager value={selectedDate} onChange={setSelectedDate} />
         </motion.div>
 
-        {/* Add food button */}
-        <motion.button
-          variants={itemVariants}
-          whileTap={{ scale: 0.97 }}
-          onClick={() => setSheetState({ kind: "add", meal: currentMealByTime() })}
-          className="w-full bg-primary text-primary-foreground font-semibold text-[15px] py-4 rounded-2xl shadow-lg shadow-primary/25 flex items-center justify-center gap-2"
-          data-testid="button-add-food"
-        >
-          <Plus size={18} strokeWidth={2.4} />
-          Add Food
-        </motion.button>
+        {/* Swipeable summary carousel */}
+        <motion.div variants={itemVariants}>
+          <SummaryCarousel
+            slides={[
+              <RingsSlide
+                key="rings"
+                totals={totals}
+                goals={goals}
+                onEditGoals={() => setShowGoals(true)}
+              />,
+              <BarsSlide
+                key="bars"
+                totals={totals}
+                goals={goals}
+                onEditGoals={() => setShowGoals(true)}
+              />,
+            ]}
+          />
+        </motion.div>
 
-        {/* Favorites */}
-        {favorites.length > 0 && (
+        {/* Add food button — only when viewing today */}
+        {isToday && (
+          <motion.button
+            variants={itemVariants}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setSheetState({ kind: "add", meal: currentMealByTime() })}
+            className="w-full bg-primary text-primary-foreground font-semibold text-[15px] py-4 rounded-2xl shadow-lg shadow-primary/25 flex items-center justify-center gap-2"
+            data-testid="button-add-food"
+          >
+            <Plus size={18} strokeWidth={2.4} />
+            Add Food
+          </motion.button>
+        )}
+
+        {/* Favorites — only when viewing today */}
+        {isToday && favorites.length > 0 && (
           <motion.section variants={itemVariants} className="flex flex-col gap-2.5">
             <div className="flex items-center gap-2 px-1">
               <Star size={13} strokeWidth={2.2} className="text-primary" />
@@ -201,13 +176,15 @@ export function Nutrition() {
           >
             <div className="flex items-center justify-between px-1">
               <h3 className="text-[13px] font-bold tracking-tight">{section.label}</h3>
-              <button
-                onClick={() => setSheetState({ kind: "add", meal: section.value })}
-                className="flex items-center gap-1 text-[11px] font-semibold text-primary/80"
-                data-testid={`button-add-${section.value}`}
-              >
-                <Plus size={12} strokeWidth={2.4} /> Add
-              </button>
+              {isToday && (
+                <button
+                  onClick={() => setSheetState({ kind: "add", meal: section.value })}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-primary/80"
+                  data-testid={`button-add-${section.value}`}
+                >
+                  <Plus size={12} strokeWidth={2.4} /> Add
+                </button>
+              )}
             </div>
             {entriesByMeal[section.value].length === 0 ? (
               <div className="bg-card/60 border border-dashed border-border/50 rounded-2xl px-4 py-4 text-center">
@@ -228,7 +205,7 @@ export function Nutrition() {
           </motion.section>
         ))}
 
-        {todayEntries.length === 0 && favorites.length === 0 && (
+        {dayEntries.length === 0 && (isToday ? favorites.length === 0 : true) && (
           <motion.div
             variants={itemVariants}
             className="bg-card/60 border border-border/40 rounded-2xl p-6 flex flex-col items-center text-center gap-2 mt-2"
@@ -236,9 +213,13 @@ export function Nutrition() {
             <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
               <Apple size={22} strokeWidth={1.6} />
             </div>
-            <p className="text-[13px] font-semibold">Start tracking your day</p>
+            <p className="text-[13px] font-semibold">
+              {isToday ? "Start tracking your day" : "Nothing logged that day"}
+            </p>
             <p className="text-[12px] text-muted-foreground/70 leading-relaxed max-w-[260px]">
-              Tap “Add Food” above to log your first meal. Foods you add often will show up here for one-tap re-add.
+              {isToday
+                ? "Tap “Add Food” above to log your first meal. Foods you add often will show up here for one-tap re-add."
+                : "No food entries were recorded for this date."}
             </p>
           </motion.div>
         )}
@@ -435,6 +416,347 @@ function GoalsSheet({
         </div>
       </motion.div>
     </motion.div>
+  );
+}
+
+// --- Date pager ---
+
+function formatPagerDate(key: string): string {
+  const today = localDayKey();
+  const yesterday = localDayKeyOffset(1);
+  if (key === today) return "Today";
+  if (key === yesterday) return "Yesterday";
+  const [y, m, d] = key.split("-").map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function DatePager({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (key: string) => void;
+}) {
+  const today = localDayKey();
+  const isToday = value === today;
+
+  const shift = (days: number) => {
+    const [y, m, d] = value.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    dt.setDate(dt.getDate() + days);
+    const next = localDayKey(dt);
+    if (next > today) return;
+    onChange(next);
+  };
+
+  return (
+    <div
+      className="flex items-center justify-between bg-card border border-border/60 rounded-2xl px-2 py-2"
+      data-testid="date-pager"
+    >
+      <button
+        onClick={() => shift(-1)}
+        className="w-10 h-10 rounded-xl bg-muted/60 flex items-center justify-center active:scale-95 transition-transform"
+        data-testid="button-prev-day"
+        aria-label="Previous day"
+      >
+        <ChevronLeft size={17} strokeWidth={2.4} />
+      </button>
+      <button
+        onClick={() => onChange(today)}
+        disabled={isToday}
+        className="flex-1 text-center text-[14px] font-bold tabular-nums disabled:opacity-100 disabled:cursor-default"
+        data-testid="text-pager-date"
+      >
+        {formatPagerDate(value)}
+        {!isToday && (
+          <span className="block text-[10px] font-semibold text-primary/80 tracking-wider uppercase mt-0.5">
+            Tap for today
+          </span>
+        )}
+      </button>
+      <button
+        onClick={() => shift(1)}
+        disabled={isToday}
+        className="w-10 h-10 rounded-xl bg-muted/60 flex items-center justify-center active:scale-95 transition-transform disabled:opacity-30"
+        data-testid="button-next-day"
+        aria-label="Next day"
+      >
+        <ChevronRight size={17} strokeWidth={2.4} />
+      </button>
+    </div>
+  );
+}
+
+// --- Summary carousel ---
+
+function SummaryCarousel({ slides }: { slides: React.ReactNode[] }) {
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const i = Math.round(el.scrollLeft / Math.max(el.clientWidth, 1));
+      setActive((prev) => (prev === i ? prev : i));
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const goTo = (i: number) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" });
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div
+        ref={scrollerRef}
+        className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar"
+        style={{ scrollbarWidth: "none" }}
+        data-testid="summary-carousel"
+      >
+        {slides.map((s, i) => (
+          <div key={i} className="snap-center shrink-0 w-full">
+            {s}
+          </div>
+        ))}
+      </div>
+      {slides.length > 1 && (
+        <div className="flex items-center justify-center gap-1.5">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className={`h-1.5 rounded-full transition-all ${
+                i === active ? "w-6 bg-primary" : "w-1.5 bg-muted-foreground/30"
+              }`}
+              aria-label={`Slide ${i + 1}`}
+              data-testid={`carousel-dot-${i}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface Totals {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+function RingsSlide({
+  totals,
+  goals,
+  onEditGoals,
+}: {
+  totals: Totals;
+  goals: NutritionGoals;
+  onEditGoals: () => void;
+}) {
+  const calRatio = Math.min(totals.calories / Math.max(goals.calories, 1), 1.2);
+  const calOver = totals.calories > goals.calories;
+  const calRemaining = Math.max(goals.calories - totals.calories, 0);
+
+  return (
+    <div
+      className="bg-card border border-border/60 rounded-3xl p-5 flex flex-col gap-4"
+      data-testid="card-summary-rings"
+    >
+      <div className="flex items-baseline justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+            Calories
+          </p>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span
+              className="text-[32px] font-bold tracking-[-0.04em] leading-none"
+              data-testid="text-calories-eaten"
+            >
+              {Math.round(totals.calories).toLocaleString()}
+            </span>
+            <span className="text-[14px] text-muted-foreground/70 font-medium">
+              / {goals.calories.toLocaleString()} cal
+            </span>
+          </div>
+          <p className="text-[12px] text-muted-foreground/70 mt-1">
+            {calOver
+              ? `${Math.round(totals.calories - goals.calories).toLocaleString()} over goal`
+              : `${Math.round(calRemaining).toLocaleString()} remaining`}
+          </p>
+        </div>
+        <button
+          onClick={onEditGoals}
+          className="text-[11px] font-semibold text-primary/80"
+          data-testid="button-edit-goals"
+        >
+          Edit goals
+        </button>
+      </div>
+
+      <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${Math.min(calRatio, 1) * 100}%` }}
+          transition={{ type: "spring", stiffness: 120, damping: 22 }}
+          className={`h-full rounded-full ${calOver ? "bg-destructive" : "bg-primary"}`}
+        />
+      </div>
+
+      <div className="flex items-center justify-around pt-1">
+        <MacroRing
+          value={totals.protein}
+          goal={goals.protein}
+          label="Protein"
+          color={MACRO_COLORS.protein}
+        />
+        <MacroRing
+          value={totals.carbs}
+          goal={goals.carbs}
+          label="Carbs"
+          color={MACRO_COLORS.carbs}
+        />
+        <MacroRing
+          value={totals.fat}
+          goal={goals.fat}
+          label="Fat"
+          color={MACRO_COLORS.fat}
+        />
+      </div>
+    </div>
+  );
+}
+
+type MacroStatus = "over" | "met" | "track";
+
+function macroStatus(value: number, goal: number): MacroStatus {
+  if (goal <= 0) return "track";
+  const pct = value / goal;
+  if (pct > 1.05) return "over";
+  if (pct >= 0.95) return "met";
+  return "track";
+}
+
+function BarsSlide({
+  totals,
+  goals,
+  onEditGoals,
+}: {
+  totals: Totals;
+  goals: NutritionGoals;
+  onEditGoals: () => void;
+}) {
+  const rows: { key: string; label: string; value: number; goal: number; unit: string }[] = [
+    { key: "calories", label: "Calories", value: totals.calories, goal: goals.calories, unit: "kcal" },
+    { key: "protein", label: "Protein", value: totals.protein, goal: goals.protein, unit: "g" },
+    { key: "carbs", label: "Carbs", value: totals.carbs, goal: goals.carbs, unit: "g" },
+    { key: "fat", label: "Fat", value: totals.fat, goal: goals.fat, unit: "g" },
+  ];
+
+  return (
+    <div
+      className="bg-card border border-border/60 rounded-3xl p-5 flex flex-col gap-4"
+      data-testid="card-summary-bars"
+    >
+      <div className="flex items-baseline justify-between">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">
+          Targets
+        </p>
+        <button
+          onClick={onEditGoals}
+          className="text-[11px] font-semibold text-primary/80"
+          data-testid="button-edit-goals-bars"
+        >
+          Edit goals
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-3.5">
+        {rows.map((r) => {
+          const pct = r.goal > 0 ? r.value / r.goal : 0;
+          const status = macroStatus(r.value, r.goal);
+          const over = Math.max(r.value - r.goal, 0);
+          const remaining = Math.max(r.goal - r.value, 0);
+
+          const barClass =
+            status === "over"
+              ? "bg-destructive"
+              : status === "met"
+                ? "bg-emerald-500"
+                : "bg-primary";
+          const pctClass =
+            status === "over"
+              ? "text-destructive"
+              : status === "met"
+                ? "text-emerald-500"
+                : "text-muted-foreground/80";
+          const subtitle =
+            status === "over"
+              ? `${Math.round(over)} ${r.unit} over goal`
+              : status === "met"
+                ? "Goal met"
+                : `${Math.round(remaining)} ${r.unit} to go`;
+
+          const valDisplay =
+            r.key === "calories"
+              ? Math.round(r.value).toLocaleString()
+              : (Math.round(r.value * 10) / 10).toString();
+          const goalDisplay =
+            r.key === "calories" ? r.goal.toLocaleString() : r.goal.toString();
+
+          return (
+            <div key={r.key} data-testid={`macro-bar-${r.key}`}>
+              <div className="flex items-baseline justify-between gap-2">
+                <p className="text-[12.5px] font-semibold leading-tight">
+                  {r.label}
+                  <span className="text-muted-foreground/60 font-normal">
+                    {" "}— {valDisplay} / {goalDisplay} {r.unit}
+                  </span>
+                </p>
+                <span className={`text-[12.5px] font-bold tabular-nums ${pctClass}`}>
+                  {Math.round(pct * 100)}%
+                </span>
+              </div>
+              <div className="h-2 mt-1.5 rounded-full bg-muted/60 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${Math.min(pct, 1) * 100}%` }}
+                  transition={{ type: "spring", stiffness: 120, damping: 22 }}
+                  className={`h-full rounded-full ${barClass}`}
+                />
+              </div>
+              <p className={`text-[10.5px] mt-1 ${pctClass}`}>{subtitle}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="flex items-center justify-center gap-3 pt-1 text-[10px] font-semibold tracking-wider uppercase">
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-primary" />
+          <span className="text-muted-foreground/70">Left</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          <span className="text-muted-foreground/70">Met</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-destructive" />
+          <span className="text-muted-foreground/70">Over</span>
+        </span>
+      </div>
+    </div>
   );
 }
 
