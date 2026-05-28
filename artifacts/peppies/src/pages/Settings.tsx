@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Bell, Scale, Info, ChevronRight, Trash2, AlertTriangle, Download, CheckCheck, Upload, FileJson, BookOpen, ShoppingBag } from "lucide-react";
+import { User, Bell, Scale, Info, ChevronRight, Trash2, AlertTriangle, Download, CheckCheck, Upload, FileJson, BookOpen, ShoppingBag, Target } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useInjections } from "@/hooks/useInjections";
 import { exportInjectionsAsCsv } from "@/utils/exportCsv";
@@ -9,7 +9,9 @@ import { AboutSheet } from "@/components/AboutSheet";
 import { HowToSheet } from "@/components/HowToSheet";
 import { ProfileSheet } from "@/components/ProfileSheet";
 import { AffiliateSheet } from "@/components/AffiliateSheet";
+import { FindMyMacrosSheet } from "@/components/FindMyMacrosSheet";
 import { useAffiliate } from "@/hooks/useAffiliate";
+import { useMacroProfile } from "@/hooks/useMacroProfile";
 import { usePreferences } from "@/hooks/usePreferences";
 import { requestNotificationPermission, notificationSupported, currentNotificationPermission } from "@/hooks/useCycleReminder";
 
@@ -37,6 +39,7 @@ const ALL_STORAGE_KEYS = [
   "peppies_steps",
   "peppies_sleep",
   "peppies_affiliate",
+  "peppies_macro_profile",
 ];
 
 function SectionLabel({ label }: { label: string }) {
@@ -230,6 +233,8 @@ export function Settings() {
   const [showHowTo, setShowHowTo] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showAffiliate, setShowAffiliate] = useState(false);
+  const [showFindMacros, setShowFindMacros] = useState(false);
+  const { macroProfile, hasMacroProfile } = useMacroProfile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { injections } = useInjections();
   const { affiliate, hasAffiliate } = useAffiliate();
@@ -330,6 +335,18 @@ export function Settings() {
               teal
               testId="settings-profile"
               onClick={() => setShowProfile(true)}
+            />
+            <Row
+              icon={Target}
+              label="Find My Macros"
+              sublabel={
+                hasMacroProfile
+                  ? `Calculated ${macroProfile.lastCalculatedAt ? new Date(macroProfile.lastCalculatedAt).toLocaleDateString() : ""} — tap to recalc`
+                  : "Calculate your daily calorie & macro targets"
+              }
+              teal
+              testId="settings-find-macros"
+              onClick={() => setShowFindMacros(true)}
             />
           </div>
 
@@ -538,6 +555,7 @@ export function Settings() {
         {showHowTo && <HowToSheet onClose={() => setShowHowTo(false)} />}
         {showAffiliate && <AffiliateSheet onClose={() => setShowAffiliate(false)} />}
         {showProfile && <ProfileSheet onClose={() => setShowProfile(false)} />}
+        {showFindMacros && <FindMyMacrosSheet onClose={() => setShowFindMacros(false)} />}
       </AnimatePresence>
     </>
   );

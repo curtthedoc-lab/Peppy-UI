@@ -1,0 +1,163 @@
+Feature Request: “Find My Macros”
+
+Add a new onboarding feature in Peppies called “Find My Macros”.
+
+Purpose
+
+Help users quickly calculate their daily calorie and macro targets based on their body stats and fitness goal.
+
+This should feel simple, fast, and beginner-friendly.
+
+⸻
+
+User Flow
+
+Create a step-by-step onboarding screen called Find My Macros.
+
+Ask the user for:
+
+* Age
+* Sex
+* Height
+* Current Weight
+* Goal Weight (optional)
+* Activity Level
+* Goal
+
+Activity Level options:
+
+* Sedentary
+* Lightly Active
+* Moderately Active
+* Very Active
+* Athlete / Extremely Active
+
+Goal options:
+
+* Lose Fat
+* Maintain Weight
+* Build Muscle
+* Body Recomposition (lose fat while maintaining/building muscle)
+
+⸻
+
+Calculator Logic
+
+1. Calculate BMR using Mifflin–St Jeor equation
+
+Male
+BMR = (10 × weight in kg) + (6.25 × height in cm) − (5 × age) + 5
+
+Female
+BMR = (10 × weight in kg) + (6.25 × height in cm) − (5 × age) − 161
+
+⸻
+
+2. Calculate TDEE
+
+Multiply BMR by activity multiplier:
+
+* Sedentary = 1.2
+* Lightly Active = 1.375
+* Moderately Active = 1.55
+* Very Active = 1.725
+* Athlete = 1.9
+
+This gives the user’s maintenance calories.
+
+⸻
+
+3. Apply Goal Adjustment
+
+Based on goal selected:
+
+Lose Fat
+→ TDEE - 300 to 500 calories
+
+Maintain
+→ TDEE
+
+Build Muscle
+→ TDEE + 150 to 300 calories
+
+Body Recomposition
+→ maintenance or slight deficit depending on user weight
+
+⸻
+
+Macro Calculation
+
+Automatically generate:
+
+Protein
+
+0.9 grams per pound of bodyweight
+
+Fat
+
+0.35 grams per pound of bodyweight
+
+Carbs
+
+Use remaining calories after protein and fat are calculated.
+
+Formula:
+
+Carbs = remaining calories ÷ 4
+
+⸻
+
+Results Screen
+
+After calculation, show a clean summary card:
+
+Your Peppies Daily Targets 🎯
+
+Calories: XXXX
+
+Protein: XXXg
+
+Carbs: XXXg
+
+Fat: XXg
+
+Text below:
+
+“Based on your stats and goal, these are your recommended daily targets. You can edit these anytime in Settings.”
+
+⸻
+
+Save to User Profile
+
+Save calculated values as the user’s default daily targets:
+
+* Daily Calories
+* Protein Goal
+* Carb Goal
+* Fat Goal
+
+Use these throughout the app dashboard and food tracker.
+
+⸻
+
+Editing
+
+Allow users to manually edit their macro targets later inside Settings if they want custom numbers.
+
+⸻
+
+Design Style
+
+Keep the design aligned with Peppies:
+
+* clean
+* modern
+* minimal
+* easy to understand
+* mobile-first
+
+Make it feel quick and encouraging—not overly technical.
+
+The goal is for users to feel like:
+
+“Peppies figured out my targets for me in under 30 seconds.”
