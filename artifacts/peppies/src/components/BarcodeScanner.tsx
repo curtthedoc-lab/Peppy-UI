@@ -22,10 +22,15 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
   const detectedRef = useRef(false);
+  const onDetectedRef = useRef(onDetected);
   const [error, setError] = useState<string | null>(null);
   const [starting, setStarting] = useState(true);
   const [manual, setManual] = useState("");
   const [showManual, setShowManual] = useState(false);
+
+  useEffect(() => {
+    onDetectedRef.current = onDetected;
+  }, [onDetected]);
 
   useEffect(() => {
     if (showManual) return;
@@ -60,7 +65,7 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
             } catch {
               // ignore
             }
-            onDetected(text);
+            onDetectedRef.current(text);
           }
         };
 
@@ -137,7 +142,7 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
       }
       controlsRef.current = null;
     };
-  }, [onDetected, showManual]);
+  }, [showManual]);
 
   const handleManualSubmit = () => {
     const v = manual.trim();
