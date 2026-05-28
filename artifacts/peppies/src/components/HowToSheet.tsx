@@ -27,6 +27,7 @@ type Step = {
   icon: typeof BookOpen;
   title: string;
   body: string;
+  tip?: { title: string; body: string };
 };
 
 const STEPS: Step[] = [
@@ -77,6 +78,11 @@ const STEPS: Step[] = [
     title: "8. Scan barcodes for fast logging",
     body:
       "Inside the Add Food sheet, tap Scan Barcode and point your phone at a packaged food's barcode. Peppies looks up the product and fills in the macros automatically. You can adjust the serving size before saving. First time you scan, allow camera access when iPhone asks.",
+    tip: {
+      title: "iPhone / Safari tip",
+      body:
+        "When iOS asks for camera access, tapping Allow only grants it for the current visit. To stop being asked every time, open the iPhone Settings app → Safari → Settings for Websites → Camera, find your Peppies site in the list, and set it to Allow. After that, Safari will remember it.",
+    },
   },
   {
     icon: Pencil,
@@ -194,6 +200,16 @@ export function HowToSheet({ onClose }: { onClose: () => void }) {
                   <p className="text-[12.5px] text-muted-foreground/85 leading-relaxed mt-1">
                     {step.body}
                   </p>
+                  {step.tip && (
+                    <div className="mt-2.5 bg-primary/10 border border-primary/25 rounded-xl px-3 py-2.5">
+                      <p className="text-[11.5px] font-semibold text-primary leading-tight">
+                        {step.tip.title}
+                      </p>
+                      <p className="text-[12px] text-muted-foreground/85 leading-relaxed mt-1">
+                        {step.tip.body}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             );
