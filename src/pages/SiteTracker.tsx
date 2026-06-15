@@ -12,7 +12,8 @@ import {
   Card,
   CardContent,
   Badge,
-  Button
+  Button,
+  cn
 } from '@blinkdotnew/ui'
 import { MapPin, User, User2, MoveHorizontal } from 'lucide-react'
 import { useInjections } from '@/hooks/useInjections'
@@ -97,7 +98,7 @@ export function SiteTracker() {
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <div className="h-3 w-3 rounded-full bg-primary shadow-[0_0_8px_rgba(167,139,250,0.8)]" />
-                    <span>Recent (< 24h)</span>
+                    <span>Recent (&lt; 24h)</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <div className="h-3 w-3 rounded-full bg-primary/60" />

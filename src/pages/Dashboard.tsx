@@ -29,12 +29,14 @@ import {
 } from 'lucide-react'
 import { useInjections } from '@/hooks/useInjections'
 import { usePeptides } from '@/hooks/usePeptides'
+import { useSettings } from '@/hooks/useSettings'
 import { format, isAfter, subDays } from 'date-fns'
 import { cn } from '@blinkdotnew/ui'
 
 export function Dashboard() {
   const { injections, isLoading: injectionsLoading } = useInjections()
   const { peptides, isLoading: peptidesLoading } = usePeptides()
+  const { settings } = useSettings()
   const navigate = useNavigate()
 
   const favorites = peptides.filter(p => Number(p.isFavorite) > 0)
